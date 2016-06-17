@@ -71,6 +71,27 @@ clean: clean-programs clean-LibHypno clean-LibHypnoQuartz
 .PHONY: clean
 
 ##-----------------------------------------------------------------------------	
+## COVERITY
+coverity: clean cov-build
+.PHONY: coverity
+
+cov-build: hypnolib.lzma
+.PHONY: cov-build
+
+hypnolib.lzma:
+	$(Q)-rm -rf cov-int 2>/dev/null
+	$(Q)cov-build --dir cov-int make
+	$(Q)tar caf hypnolib.lzma cov-int
+	
+coverity-submit: cov-build
+	$(Q)curl --form token=B0QLd2JFgq8-6jqLUOUqYA \
+		  --form email=linux@quartz-net.co.uk \
+		  --form file=@hypnolib.lzma \
+		  --form version="Version" \
+		  --form description="Description" \
+		  https://scan.coverity.com/builds?project=sdprice1%2Fhypnolib
+
+##-----------------------------------------------------------------------------	
 programs: build/Makefile
 	$(Q)cd $(dir $<) && $(MAKE) --no-print-directory $(MAKE_DEBUG)
 .PHONY: programs

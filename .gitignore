@@ -32,3 +32,5 @@
 /build
 /*/build
 
+/cov-int/
+/hypnolib.lzma
