@@ -1,0 +1,27 @@
+/*!
+ * Copyright (c) 2014 AceAxis Limited.
+ * All Rights Reserved
+ *
+ * \file      GenToolTests.cpp
+ * \brief     <one-line description of file>
+ *
+ * \date      25 Feb 2014
+ * \author    sprice
+ *
+ * \details   <multi-line detailed description of file>
+ *
+ */
+#include <unistd.h>
+#include "gtest/gtest.h"
+
+int main( int argc, char* argv[] )
+{
+	::testing::InitGoogleTest(&argc, argv);
+	chdir("Path") ;
+
+char path[256] ;
+getcwd(path, sizeof(path)) ;
+std::cerr << "cwd=" << path << std::endl ;
+
+	return RUN_ALL_TESTS();
+}
