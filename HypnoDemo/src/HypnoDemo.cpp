@@ -346,8 +346,11 @@ int main(int argc, char ** argv)
 
 
 	// finally - run the demo!
-	RunDemo(port,device);
-
+	try {
+		RunDemo(port,device);
+	} catch (...) {
+		std::cerr << "Unable to run demo" << std::endl ;
+	}
 
 	return 0;
 } // main

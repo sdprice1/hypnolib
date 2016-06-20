@@ -139,13 +139,15 @@ public:
 
 protected:
 	const bool& operator [](unsigned index) const ;
+	unsigned toIndex(unsigned x, unsigned y) const ;
 
 private:
 	unsigned mWidth ;
 	unsigned mHeight ;
 	unsigned mMaxIndex ;
 	char mCc ;
-	std::vector<std::vector<bool>> mPixels ;
+//	std::vector<std::vector<bool>> mPixels ;
+	std::vector<bool> mPixels ;
 } ;
 
 }

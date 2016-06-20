@@ -54,7 +54,7 @@ FontChar::FontChar(unsigned width, unsigned height, char cc, std::vector<std::st
 	mHeight(height),
 	mMaxIndex(0),
 	mCc(cc),
-	mPixels()
+	mPixels(mHeight * mWidth, false)
 {
 	// Bounds checks
 	if (data.size() != mHeight)
@@ -68,19 +68,18 @@ FontChar::FontChar(unsigned width, unsigned height, char cc, std::vector<std::st
 	}
 
 	// Process the data
-	mPixels.reserve(mHeight) ;
+	unsigned y(mHeight-1) ;
 	for (auto line : data)
 	{
-		std::vector<bool> pixelLine(mWidth, false) ;
-		unsigned col(0) ;
+		unsigned x(0) ;
 		for (auto cc : line)
 		{
 			if (cc != ' ')
-				pixelLine[col] = true ;
+				mPixels[toIndex(x, y)] = true ;
 
-			++col ;
+			++x ;
 		}
-		mPixels.insert(mPixels.begin(), pixelLine) ;
+		--y ;
 	}
 
 	// Finally ok to set the limits
@@ -113,12 +112,11 @@ char FontChar::getChar() const
 //-------------------------------------------------------------------------------------------------------------
 bool FontChar::getPixel(unsigned x, unsigned y) const
 {
-	if (x >= mWidth)
-		return false ;
-	if (y >= mHeight)
+	unsigned index(toIndex(x, y)) ;
+	if (index > mMaxIndex)
 		return false ;
 
-	return mPixels[y][x] ;
+	return mPixels[index] ;
 }
 
 
@@ -135,7 +133,7 @@ FontChar::const_iterator FontChar::begin() const
 //-------------------------------------------------------------------------------------------------------------
 FontChar::const_iterator FontChar::end() const
 {
-	return const_iterator(this, mWidth * mHeight) ;
+	return const_iterator(this, mMaxIndex+1) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -160,10 +158,13 @@ const bool& FontChar::operator [](unsigned index) const
 	if (index > mMaxIndex)
 		return null ;
 
-	unsigned y(index / mWidth) ;
-	unsigned x(index % mWidth) ;
-	const bool& val(mPixels[y][x]) ;
-	return val ;
+	return std::move(mPixels[index]) ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+unsigned FontChar::toIndex(unsigned x, unsigned y) const
+{
+	return(y * mWidth + x) ;
 }
 
 //=============================================================================================================
