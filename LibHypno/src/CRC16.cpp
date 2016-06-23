@@ -7,7 +7,7 @@
 
 namespace HypnoGadget {
 
-typedef uint16 CRC;
+typedef uint16_t CRC;
 #define WIDTH    (8 * sizeof(CRC))
 #define TOPBIT   (1 << (WIDTH-1))
 #define POLYNOMIAL 0x1021
@@ -55,8 +55,8 @@ static const rom CRC crcTable_[256] = {
 #if 0
 void CRCInit(void)
 	{
-	uint16 dividend;
-	uint8 bit;
+	uint16_t dividend;
+	uint8_t bit;
 	CRC remainder;
 
 	// Compute the remainder of each possible dividend.
@@ -84,16 +84,15 @@ void CRCInit(void)
 #endif
 
 // compute the CRC
-CRC CRC16(const uint8 * message, uint16 size)
+CRC CRC16(const uint8_t * message, uint16_t size)
 	{
-    uint8  data;
     CRC    remainder = 0xFFFF;
-	uint16 byte;
+	uint16_t byte;
 
     // Divide the message by the polynomial, a byte at a time.
     for (byte = 0; byte < size; ++byte)
 		{
-        data = message[byte] ^ (remainder >> (WIDTH - 8));
+        uint8_t data = message[byte] ^ (remainder >> (WIDTH - 8));
         remainder = crcTable_[data] ^ (remainder << 8);
 	    }
 

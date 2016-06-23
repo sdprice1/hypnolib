@@ -37,7 +37,9 @@ addLib(libs LibHypno)
 ##----------------------------------------------------------------------------------------------------------------------
 ## Library Source
 add_subdirectory (common)
+add_subdirectory (Paint)
 add_subdirectory (Gadget)
+add_subdirectory (Model)
 add_subdirectory (Text)
 
 add_library (${PROJECT_NAME} STATIC ${SOURCES})

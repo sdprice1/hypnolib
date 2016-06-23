@@ -48,7 +48,7 @@ using namespace HypnoQuartz ;
 namespace HypnoQuartz {
 
 struct ReplyEvent {
-	ReplyEvent(Command::CommandType type, HypnoGadget::uint16 length, HypnoGadget::uint16 crc) :
+	ReplyEvent(Command::CommandType type, uint16_t  length, uint16_t  crc) :
 		mType(type),
 		mLength(length),
 		mCrc(crc)
@@ -61,8 +61,8 @@ struct ReplyEvent {
 	{}
 
 	Command::CommandType mType ;
-	HypnoGadget::uint16 mLength ;
-	HypnoGadget::uint16 mCrc ;
+	uint16_t  mLength ;
+	uint16_t  mCrc ;
 };
 
 }
@@ -93,7 +93,7 @@ GadgetQuartz::GadgetQuartz() :
 	mThread = std::thread(&GadgetQuartz::threadRun, this) ;
 
 	// Now register our callback
-	mGadget->registerReplyCallback([this](Command::CommandType type, uint16 length, uint16 crc){
+	mGadget->registerReplyCallback([this](Command::CommandType type, uint16_t length, uint16_t crc){
 		replyCallback(type, length, crc) ;
 	}) ;
 }
@@ -176,8 +176,8 @@ std::cerr << TimeUtils::timestamp() << " CMD: getInfo(0,0)" << std::endl ;
 	while (true)
 	{
 		bool ok = waitReply(std::set<Command::CommandType>({Command::Info, Command::Options}), 1000) ;
-		uint8 vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
-		uint8 transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
+		uint8_t vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
+		uint8_t transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
 
 std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
 
@@ -188,20 +188,20 @@ std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount
 	}
 
 
-	uint8 vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
-	uint8 transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
+	uint8_t vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
+	uint8_t transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
 
 std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
 
 	std::cerr << "Got info" << std::endl ;
-	for (uint8 viz=0; viz < vizCount; ++viz)
+	for (uint8_t viz=0; viz < vizCount; ++viz)
 	{
 		std::string name ;
 		mGadget->GetName(GadgetControl::InfoType::VisualizationType, name, viz);
 		std::cerr << (unsigned)viz << ": " << name << std::endl ;
 	}
 
-	for (uint8 trans=0; trans < transCount; ++trans)
+	for (uint8_t trans=0; trans < transCount; ++trans)
 	{
 		std::string name ;
 		mGadget->GetName(GadgetControl::InfoType::TransitionType, name, trans);
@@ -240,23 +240,31 @@ bool GadgetQuartz::getOptions(HypnoGadget::Options& opts)
 
 
 //-------------------------------------------------------------------------------------------------------------
-bool GadgetQuartz::writeFrame(HypnoGadget::uint8* image)
+bool GadgetQuartz::writeFrame(const uint8_t * image)
 {
 	// send the image
+	std::cerr << TimeUtils::timestamp() << " CMD: SetFrame" << std::endl ;
 	mGadget->SetFrame(image);
 
-	// wait for reply packet
-	if (!waitReply(Command::SetFrame, REPLY_DELAY_MSECS))
-		return false ;
+//	// wait for reply packet
+//	if (!waitReply(Command::SetFrame, REPLY_DELAY_MSECS))
+//		return false ;
 
 	// show the image
+	std::cerr << TimeUtils::timestamp() << " CMD: FlipFrame" << std::endl ;
 	mGadget->FlipFrame();
 
-	// wait for reply packet
-	if (!waitReply(Command::FlipFrame, REPLY_DELAY_MSECS))
-		return false ;
+//	// wait for reply packet
+//	if (!waitReply(Command::FlipFrame, REPLY_DELAY_MSECS))
+//		return false ;
 
 	return true ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+bool GadgetQuartz::writeFrame(const std::vector<uint8_t >& image)
+{
+	return writeFrame(&image[0]) ;
 }
 
 //=============================================================================================================
@@ -299,9 +307,9 @@ void GadgetQuartz::threadRun()
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-void GadgetQuartz::replyCallback(Command::CommandType type, HypnoGadget::uint16 length, HypnoGadget::uint16 crc)
+void GadgetQuartz::replyCallback(Command::CommandType type, uint16_t  length, uint16_t  crc)
 {
-	std::cerr << TimeUtils::timestamp() << " GadgetQuartz::replyCallback type=" << type << std::endl ;
+	std::cerr << TimeUtils::timestamp() << " REPLY: " << type << " '" << Command::commandStr(type) << "'" << std::endl ;
 
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mReplyEvents.push(std::make_shared<ReplyEvent>(type, length, crc)) ;
@@ -371,3 +379,4 @@ bool GadgetQuartz::_waitReply(const std::set<Command::CommandType>& types, WaitF
 	// will never get here
 	return false ;
 }
+

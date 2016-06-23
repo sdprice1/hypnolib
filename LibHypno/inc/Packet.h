@@ -51,26 +51,26 @@ typedef enum
 
 typedef struct {
 	// global packet data - tracks statistics and errors
-	uint32 byteCount_;
-	uint32 packetCount_;
-	uint32 errorCount_;
+	uint32_t byteCount_;
+	uint32_t packetCount_;
+	uint32_t errorCount_;
 	PacketError packetError_;
 
 	// decoded packets get merged here, until done, then signaled
-	uint8  decodeDestination_; // assume broadcast
-	uint16 decodeLength_; // length of decoded data
-	uint16 packetEncodedCRC_; // last encoded CRC
-	uint16 packetDecodedCRC_; // last decoded CRC
-	uint8  decodeData_[(PacketPayLength+PacketOverhead+1)*PacketMaxCount];     // decoded data
+	uint8_t  decodeDestination_; // assume broadcast
+	uint16_t decodeLength_; // length of decoded data
+	uint16_t packetEncodedCRC_; // last encoded CRC
+	uint16_t packetDecodedCRC_; // last decoded CRC
+	uint8_t  decodeData_[(PacketPayLength+PacketOverhead+1)*PacketMaxCount];     // decoded data
 	bool dataBlockReady_; // signals when a set of packets have been disassembled and are ready for consumption
 
 	// decoded single packet
-	uint8 packetData_[(PacketPayLength+PacketOverhead+1)*2];     // decoded data
-	uint8 packetPos_;
-	uint8 packetSequence_; // sequence counter for the packet decoding
+	uint8_t packetData_[(PacketPayLength+PacketOverhead+1)*2];     // decoded data
+	uint8_t packetPos_;
+	uint8_t packetSequence_; // sequence counter for the packet decoding
 
 	// state for byte decoder
-	uint8 syncCounter_;  // keeps track of if we're between SYNC characters
+	uint8_t syncCounter_;  // keeps track of if we're between SYNC characters
 
 	} PacketHandlerState;
 
@@ -88,33 +88,33 @@ void PacketClearError(PacketHandlerState * state);
 // returns number of unprocessed bytes, which are likely the next packet. 
 // After processing the packet data, the data is prepared to be read by 
 // PacketGetData. 
-uint16 PacketDecodeBytes(PacketHandlerState * state, const uint8 * data, uint16 length);
+uint16_t PacketDecodeBytes(PacketHandlerState * state, const uint8_t * data, uint16_t length);
 
 // send a block of data of given length
 // to the destination item (0 = broadcast)
 // return true iff sent ok
 // todo- comment
-bool PacketSendData(PacketHandlerState * state, void (*IOWriteByte)(void * param, uint8), void * ioParam, uint8 destination, const uint8 * data, uint16 length);
+bool PacketSendData(PacketHandlerState * state, void (*IOWriteByte)(void * param, uint8_t), void * ioParam, uint8_t destination, const uint8_t * data, uint16_t length);
 
 // see if a packet is ready, returns true iff one is ready
 // sets a pointer to the decoded data
 // if one was ready, resets internals to process the next packet
-bool PacketGetData(PacketHandlerState * state, uint8 * destination, uint8 ** data, uint16 * length);
+bool PacketGetData(PacketHandlerState * state, uint8_t * destination, uint8_t ** data, uint16_t * length);
 
 // get count of bytes decoded since last reset
-uint32 PacketByteCount(PacketHandlerState * state);
+uint32_t PacketByteCount(PacketHandlerState * state);
 
 // get count of packets seen since last reset
-uint32 PacketCount(PacketHandlerState * state);
+uint32_t PacketCount(PacketHandlerState * state);
 
 // get count of packet errors seen since last reset
-uint32 PacketErrorCount(PacketHandlerState * state);
+uint32_t PacketErrorCount(PacketHandlerState * state);
 
 // sequence counter for previous packet
-uint8 PacketSequence(PacketHandlerState * state);
+uint8_t PacketSequence(PacketHandlerState * state);
 
 // CRC for previous packet (encoded or decoded)
-uint16 PacketCRC(PacketHandlerState * state, bool decoded);
+uint16_t PacketCRC(PacketHandlerState * state, bool decoded);
 
 }; // namespace HypnoGadget
 

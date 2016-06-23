@@ -16,26 +16,31 @@
 ## along with Hypnocube.  If not, see <http://www.gnu.org/licenses/>.
 
 ##----------------------------------------------------------------------------------------------------------------------
-list(APPEND CMAKE_MODULE_PATH ${TOPDIR}/cmake/Modules)
-include (settings)
-include (functions)
-
-include_directories(inc)
-
-##---------------------------------------------------------------------------------------------------------------------
-set (program HypnoDemo)
-
-##---------------------------------------------------------------------------------------------------------------------
-set (SOURCES
-    src/CubeAnim.cpp
-    src/SquareAnim.cpp
-    src/HypnoDemo.cpp
+## Library Source
+add_sources (SOURCES
+    src/Coord.cpp
+    src/CoordMap.cpp
+    src/CubeCoordMap.cpp
+    src/Colour.cpp
+    src/Model.cpp
+    src/SquareModel.cpp
+    src/CubeModel.cpp
 )
 
-## Uses hypno lib
-addLib(libs LibHypno)
-addLib(libs LibHypnoQuartz)
+## Cppcheck
+include (cppcheck)
+addCppcheck(Model)
 
-## Executable
-addExecutable(${program} "${libs}" ${SOURCES})
-##target_link_libraries(${program} ncurses)
+	# Load google test
+	include (gtest)
+
+	include_directories(.)
+	set(gtest_src
+		gtest/Coord_unittest.cpp
+		gtest/CubeCoordMap_unittest.cpp
+		gtest/Colour_unittest.cpp
+	)
+	addGtest(Model_GTEST "" ${gtest_src})
+
+
+

@@ -56,8 +56,8 @@ static void SetPacketError(PacketHandlerState * state, PacketError error)
 // checks packet integrity, and sets internal error conditions as needed.
 static void PacketDecode(PacketHandlerState * state)
 	{
-	uint16 pos, dst = 0, crc1, crc2;
-	uint8 type;
+	uint16_t pos, dst = 0, crc1, crc2;
+	uint8_t type;
 	
 	// error - no packet this small
 	if (state->packetPos_ < PacketOverhead+1)
@@ -70,7 +70,7 @@ static void PacketDecode(PacketHandlerState * state)
 	// removing ESCaped bytes. 
 	for (pos = 0; pos < state->packetPos_; ++pos)
 		{
-		uint8 byte = state->packetData_[pos];
+		uint8_t byte = state->packetData_[pos];
 		if (PacketESC == byte)
 			{ // ESC sequence
 			byte = state->packetData_[++pos];
@@ -87,7 +87,7 @@ static void PacketDecode(PacketHandlerState * state)
 		state->packetData_[dst++] = byte; // save the byte out
 		}
 
-	state->packetPos_ = (uint8)dst; // set this
+	state->packetPos_ = (uint8_t)dst; // set this
 
 	// check checksum
 	crc1 = CRC16(state->packetData_,state->packetPos_-2);
@@ -156,13 +156,13 @@ static void PacketDecode(PacketHandlerState * state)
 // If embedded text is found, return textLength which is the number of text 
 // characters AFTER the other bytes were processed, and this count is not 
 // included in the unprocessed byte count.
-uint16 PacketDecodeBytes(PacketHandlerState * state, const uint8 * data, uint16 length)
+uint16_t PacketDecodeBytes(PacketHandlerState * state, const uint8_t * data, uint16_t length)
 	{
 	if (true == state->dataBlockReady_)
 		return length; // done - this needs to be handled before any more work can be done
 	while (length)
 		{
-		uint8 byte = *data++;
+		uint8_t byte = *data++;
 		length--;
 		++state->byteCount_; // one more eaten
 		if (0 == (state->syncCounter_&1))
@@ -223,7 +223,7 @@ uint16 PacketDecodeBytes(PacketHandlerState * state, const uint8 * data, uint16 
 
 // see if a packet is ready, returns true iff one is ready
 // sets a pointer to the decoded data
-bool PacketGetData(PacketHandlerState * state, uint8 * destination, uint8 ** data, uint16 * length)
+bool PacketGetData(PacketHandlerState * state, uint8_t * destination, uint8_t ** data, uint16_t * length)
 	{
 	if (false == state->dataBlockReady_)
 		{
@@ -249,16 +249,16 @@ bool PacketGetData(PacketHandlerState * state, uint8 * destination, uint8 ** dat
 // send a block of data of given length
 // to the destination item (0 = broadcast)
 // return true iff sent ok
-bool PacketSendData(PacketHandlerState * state, void (*IOWriteByte)(void * param, uint8), void * ioParam, uint8 destination, const uint8 * data, uint16 length)
+bool PacketSendData(PacketHandlerState * state, void (*IOWriteByte)(void * param, uint8_t), void * ioParam, uint8_t destination, const uint8_t * data, uint16_t length)
 	{
-	uint8 buffer[PacketOverhead+PacketPayLength+1]; // space for constructing a single packet
-	uint8 sequence = 0; // number of packets sent this data block
+	uint8_t buffer[PacketOverhead+PacketPayLength+1]; // space for constructing a single packet
+	uint8_t sequence = 0; // number of packets sent this data block
 	while (length > 0)
 		{
-		uint16 pos;       // general counter
-		uint16 dest;      // where we are in the buffer
-		uint16 curLength; // send to sent this packet
-		uint16 crc;
+		uint16_t pos;       // general counter
+		uint16_t dest;      // where we are in the buffer
+		uint16_t curLength; // send to sent this packet
+		uint16_t crc;
 
 		dest = 0; // start of packet data
 		
@@ -274,7 +274,7 @@ bool PacketSendData(PacketHandlerState * state, void (*IOWriteByte)(void * param
 		else
 			buffer[dest] = PacketLast<<5;
 		buffer[dest++] |= (sequence&PacketSequenceMask); // set type and sequence
-		buffer[dest++] = (uint8)(curLength&255); // set length of data
+		buffer[dest++] = (uint8_t)(curLength&255); // set length of data
 		buffer[dest++] = destination;            // item id to talk to
 
 		while (curLength--)
@@ -324,31 +324,31 @@ PacketError PacketGetError(PacketHandlerState * state)
 	} // PacketGetError
 
 // get count of bytes decoded
-uint32 PacketByteCount(PacketHandlerState * state)
+uint32_t PacketByteCount(PacketHandlerState * state)
 	{
 	return state->byteCount_;
 	} // PacketByteCount
 
 // get count of packets seen
-uint32 PacketCount(PacketHandlerState * state)
+uint32_t PacketCount(PacketHandlerState * state)
 	{
 	return state->packetCount_;
 	} // PacketCount
 
 // get count of packet errors seen
-uint32 PacketErrorCount(PacketHandlerState * state)
+uint32_t PacketErrorCount(PacketHandlerState * state)
 	{
 	return state->errorCount_;
 	} // PacketErrorCount
 
 // sequence counter for previous packet
-uint8 PacketSequence(PacketHandlerState * state)
+uint8_t PacketSequence(PacketHandlerState * state)
 	{
 	return state->packetSequence_;
 	}
 
 // CRC for previous packet (encoded or decoded)
-uint16 PacketCRC(PacketHandlerState * state, bool decoded)
+uint16_t PacketCRC(PacketHandlerState * state, bool decoded)
 	{
 	if (true == decoded)
 		return state->packetDecodedCRC_;

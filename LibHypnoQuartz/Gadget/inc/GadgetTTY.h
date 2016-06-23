@@ -43,10 +43,10 @@ public:
 	void Close(void) ;
 
 	// Read any available data - returns immediately
-	int readNoBlocking(HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length) ;
+	int readNoBlocking(uint8_t  * buffer, uint16_t  length) ;
 
 	// Wait for at least 1 byte of data before returning
-	int read(HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length) ;
+	int read(uint8_t  * buffer, uint16_t  length) ;
 
 	// TX buffer empty
 	bool isTxDone() ;
@@ -56,7 +56,7 @@ public:
 
 public:
 	// Debug
-	static void dump(const std::string& msg, const HypnoGadget::uint8 * buffer, HypnoGadget::uint16 dataSize);
+	static void dump(const std::string& msg, const uint8_t  * buffer, uint16_t  dataSize);
 
 
 public:
@@ -65,11 +65,11 @@ public:
 	// Needed by the GadgetControl class
 	// read bytes from the IO buffer to be processed
 	// of max given length, and return size read
-	virtual HypnoGadget::uint16 ReadBytes(HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length) override ;
+	virtual uint16_t  ReadBytes(uint8_t  * buffer, uint16_t  length) override ;
 
 	// Needed by the GadgetControl class
 	// write bytes to the IO buffer
-	virtual void WriteBytes(const HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length) override ;
+	virtual void WriteBytes(const uint8_t  * buffer, uint16_t  length) override ;
 
 private:
 	// open tty
@@ -85,8 +85,8 @@ private:
 private:
 	bool mRun ;
 	int mFd;
-	std::vector<HypnoGadget::uint8> mTxBuffer ;
-	std::vector<HypnoGadget::uint8> mRxBuffer ;
+	std::vector<uint8_t > mTxBuffer ;
+	std::vector<uint8_t > mRxBuffer ;
 
 	std::thread mThread ;
 	std::mutex mMutex ;

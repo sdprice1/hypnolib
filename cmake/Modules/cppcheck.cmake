@@ -30,6 +30,7 @@ set (_INCLUDED_CPPCHECK 1)
 ##----------------------------------------------------------------------------------------------------------------------
 ## Find executable
 FIND_PROGRAM( CPPCHECK_EXECUTABLE cppcheck PATHS /usr/bin NO_DEFAULT_PATH)
+FIND_PROGRAM( CPPCHECK_EXECUTABLE cppcheck PATHS /usr/local/bin NO_DEFAULT_PATH)
 logDebug("CPPCHECK=${CPPCHECK_EXECUTABLE}")
 
 

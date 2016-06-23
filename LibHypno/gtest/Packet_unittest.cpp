@@ -43,7 +43,7 @@ using namespace HypnoGadget ;
 
 namespace {
 
-	bool compare(uint8* data, uint8* expected, uint16 length)
+	bool compare(uint8_t* data, uint8_t* expected, uint16_t length)
 	{
 		for (unsigned i=0; i < length; ++i)
 		{
@@ -80,16 +80,16 @@ TEST(Packet, Login)
 	//
 	// Note that the data length should be 5, but the data contains 0xc0 which will be expanded
 	//
-	uint8 pdata[] = {0xc0,  0x60, 0x05, 0x00, 0x00, 0xab, 0xad, 0xdb, 0xdc, 0xde,  0xf2, 0x62,  0xc0} ;
+	uint8_t pdata[] = {0xc0,  0x60, 0x05, 0x00, 0x00, 0xab, 0xad, 0xdb, 0xdc, 0xde,  0xf2, 0x62,  0xc0} ;
 	EXPECT_EQ(0u, PacketDecodeBytes(&state, pdata, sizeof(pdata))) ;
 
-	uint8 destination;
-	uint8 *data ;
-	uint16 length ;
+	uint8_t destination;
+	uint8_t *data ;
+	uint16_t length ;
 	EXPECT_TRUE(PacketGetData(&state, &destination, &data, &length));
 
 	EXPECT_EQ(5u, length) ;
-	uint8 expected[] = { 0x00, 0xab, 0xad, 0xc0, 0xde } ;
+	uint8_t expected[] = { 0x00, 0xab, 0xad, 0xc0, 0xde } ;
 	EXPECT_TRUE(compare(data, expected, length)) ;
 }
 
@@ -111,12 +111,12 @@ TEST(Packet, PartialPacket)
 	//
 	// Note that the data length should be 5, but the data contains 0xc0 which will be expanded
 	//
-	uint8 pdata[] = {0xc0,  0x60, 0x05, 0x00, 0x00, 0xab, 0xad, 0xdb, 0xdc, 0xde,  0xf2, 0x62,  0xc0} ;
-	uint16 total = sizeof(pdata) ;
+	uint8_t pdata[] = {0xc0,  0x60, 0x05, 0x00, 0x00, 0xab, 0xad, 0xdb, 0xdc, 0xde,  0xf2, 0x62,  0xc0} ;
+	uint16_t total = sizeof(pdata) ;
 
-	uint8 destination;
-	uint8 *data ;
-	uint16 length ;
+	uint8_t destination;
+	uint8_t *data ;
+	uint16_t length ;
 
 	unsigned offset(0) ;
 	EXPECT_EQ(0u, PacketDecodeBytes(&state, &pdata[offset], 4)) ;
@@ -134,7 +134,7 @@ TEST(Packet, PartialPacket)
 	EXPECT_TRUE(PacketGetData(&state, &destination, &data, &length));
 
 	EXPECT_EQ(5u, length) ;
-	uint8 expected[] = { 0x00, 0xab, 0xad, 0xc0, 0xde } ;
+	uint8_t expected[] = { 0x00, 0xab, 0xad, 0xc0, 0xde } ;
 	EXPECT_TRUE(compare(data, expected, length)) ;
 }
 

@@ -33,8 +33,12 @@
 
 #include <string>
 #include <stack>
+#include <vector>
 #include <memory>
 #include <set>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include "GadgetTTY.h"
 #include "Command.h"
@@ -70,13 +74,14 @@ public:
 	// get options
 	bool getOptions(HypnoGadget::Options& opts) ;
 
-	// Write out an amination frame (i.e. set all the pixels/LEDs)
-	bool writeFrame(HypnoGadget::uint8* image) ;
+	// Write out an animation frame (i.e. set all the pixels/LEDs)
+	bool writeFrame(const std::vector<uint8_t >& image) ;
+	bool writeFrame(const uint8_t * image) ;
 
 
 private:
 	// Callback for whenever a reply is received
-	void replyCallback(HypnoGadget::Command::CommandType type, HypnoGadget::uint16 length, HypnoGadget::uint16 crc) ;
+	void replyCallback(HypnoGadget::Command::CommandType type, uint16_t  length, uint16_t  crc) ;
 
 	// Wait for a specific reply type indefinitely. Will always return true when finds searched for type
 	bool waitReply(HypnoGadget::Command::CommandType type) ;

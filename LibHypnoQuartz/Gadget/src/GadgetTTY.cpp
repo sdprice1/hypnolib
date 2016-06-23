@@ -87,7 +87,8 @@ bool GadgetTTY::Open(const std::string& portName)
 	Close() ;
 
 	// determine which type of open to use
-	if (portName.find("/dev/tty") == 0)
+//	if (portName.find("/dev/tty") == 0)
+	if (portName.compare(0, 8, "/dev/tty") == 0)
 		return ttyOpen(portName) ;
 
 	// allow use of files, pipes, fifos etc
@@ -103,7 +104,8 @@ std::cerr << "GadgetTTY::waitOpen(" << portName << ")" << std::endl ;
 	Close() ;
 
 	// determine which type of open to use
-	if (portName.find("/dev/tty") != 0)
+//	if (portName.find("/dev/tty") != 0)
+	if (portName.compare(0, 8, "/dev/tty") != 0)
 		return genericOpen(portName) ;
 
 	// Wait here indefinitely until device becomes available
@@ -149,7 +151,7 @@ std::cerr << "GadgetTTY::Close() - DONE" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-int GadgetTTY::readNoBlocking(HypnoGadget::uint8* buffer, HypnoGadget::uint16 length)
+int GadgetTTY::readNoBlocking(uint8_t * buffer, uint16_t  length)
 {
 	// non-blocking check for data
 	{
@@ -162,7 +164,7 @@ int GadgetTTY::readNoBlocking(HypnoGadget::uint8* buffer, HypnoGadget::uint16 le
 }
 
 //-------------------------------------------------------------------------------------------------------------
-int GadgetTTY::read(HypnoGadget::uint8* buffer, HypnoGadget::uint16 length)
+int GadgetTTY::read(uint8_t * buffer, uint16_t  length)
 {
 	std::cout << "read " << length << " bytes ... " << std::endl ;
 
@@ -213,13 +215,13 @@ bool GadgetTTY::isRxDone()
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-HypnoGadget::uint16 GadgetTTY::ReadBytes(HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length)
+uint16_t  GadgetTTY::ReadBytes(uint8_t  * buffer, uint16_t  length)
 {
-	return (HypnoGadget::uint16)readNoBlocking(buffer, length);
+	return (uint16_t )readNoBlocking(buffer, length);
 }
 
 //-------------------------------------------------------------------------------------------------------------
-void GadgetTTY::WriteBytes(const HypnoGadget::uint8 * buffer, HypnoGadget::uint16 length)
+void GadgetTTY::WriteBytes(const uint8_t  * buffer, uint16_t  length)
 {
 	dump("Writing", buffer, length) ;
 
@@ -232,7 +234,7 @@ void GadgetTTY::WriteBytes(const HypnoGadget::uint8 * buffer, HypnoGadget::uint1
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-void GadgetTTY::dump(const std::string& msg, const HypnoGadget::uint8 * buffer, HypnoGadget::uint16 dataSize)
+void GadgetTTY::dump(const std::string& msg, const uint8_t  * buffer, uint16_t  dataSize)
 {
 	std::cout << "=v========================================" << std::endl ;
 	std::cout << "== " << msg << " == " << std::endl ;

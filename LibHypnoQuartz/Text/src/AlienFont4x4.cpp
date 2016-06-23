@@ -71,6 +71,7 @@ AlienFont4x4::AlienFont4x4() :
 {
 	defineUppercase() ;
 	defineLowercase() ;
+	defineNumerals() ;
 	defineSpecial() ;
 
 }

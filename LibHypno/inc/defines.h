@@ -5,10 +5,11 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <cstdint>
+
 // Linux
 #ifndef WIN32
 #include <unistd.h>
-#include <stdint.h>
 
 #include <cstdlib>
 #include <cstddef>
@@ -17,22 +18,6 @@
 #define rom
 //#define Sleep(secs)	sleep(secs)
 #endif // NOT WIN32
-
-
-
-namespace HypnoGadget {
-
-#ifdef WIN32
-typedef unsigned long  uint32;
-typedef unsigned short uint16;
-typedef unsigned char  uint8;
-#else
-typedef uint32_t uint32;
-typedef uint16_t uint16;
-typedef uint8_t  uint8;
-
-#endif
-}; // namespace
 
 #endif // defines.h
 // end - defines.h

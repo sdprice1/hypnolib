@@ -21,10 +21,10 @@ public:
 
 	// read bytes from the IO buffer to be processed
 	// of max given length, and return size read
-	virtual uint16 ReadBytes(uint8 * buffer, uint16 length) = 0;
+	virtual uint16_t ReadBytes(uint8_t * buffer, uint16_t length) = 0;
 
 	// write bytes to the IO buffer
-	virtual void WriteBytes(const uint8 * buffer, uint16 length) = 0;
+	virtual void WriteBytes(const uint8_t * buffer, uint16_t length) = 0;
 
 	};
 
@@ -82,7 +82,7 @@ public:
 	// console bytes are logged, this retrieves a copy of the current log
 	void ConsoleLog(std::string & text);
 	// only store so many characters (0 for infinite, default 10000)
-	void ConsoleReset(uint32 size);
+	void ConsoleReset(uint32_t size);
 	// clear the console text
 	void ConsoleClear(void);
 
@@ -118,42 +118,42 @@ public:
 		{
 		SoftwareVersion,HardwareVersion,ProtocolVersion
 		};
-	void GetVersion(VersionType type, uint8 & major, uint8 & minor);
+	void GetVersion(VersionType type, uint8_t & major, uint8_t & minor);
 
 	enum InfoType
 		{
 		VisualizationType, TransitionType
 		};
 	// get the count of items loaded
-	uint8 GetCount(InfoType type);
+	uint8_t GetCount(InfoType type);
 	// get 0 numbered item, return blank string if out of bounds
-	void GetName(InfoType type, std::string & name, uint8 index);
+	void GetName(InfoType type, std::string & name, uint8_t index);
 
 	// return true if a frame ready to read
 	// resets internal flag when read
 	// returns pointer to internal buffer and size of buffer
-	bool GetFrame(uint8 ** buffer, int & size);
+	bool GetFrame(uint8_t ** buffer, int & size);
 
 	// commands that can be called on the gadget
-	void Login(uint32 val = 0xABADC0DE); // Login with given challenge value, default
+	void Login(uint32_t val = 0xABADC0DE); // Login with given challenge value, default
 	void Logout(void);
 	void GetFrame(void);	// todo - describe all, order by spec
 	void MaxVisIndex(void);
-	void SelectVis(uint8 vis);
+	void SelectVis(uint8_t vis);
 	void MaxTranIndex(void);
-	void SelectTran(uint8 trans);
+	void SelectTran(uint8_t trans);
 	void Version(void);
-	void Info(uint8 type, uint8 index);
+	void Info(uint8_t type, uint8_t index);
 	void Ping(void);
 	void Reset(void);
 	void Options(bool write);
-	void SetFrame(const uint8 * buffer);
+	void SetFrame(const uint8_t * buffer);
 	void FlipFrame(void);
 
 	// new - register a callback for when a complete reply arrives
 
 	// If set, this callback is called with the reply command type, the full data length, and (if applicable) the crc
-	using ReplyCallback = std::function<void(Command::CommandType type, uint16 length, uint16 crc)>  ;
+	using ReplyCallback = std::function<void(Command::CommandType type, uint16_t length, uint16_t crc)>  ;
 
 	// Register the reply callback with the gadget - only one is supported (for now)
 	void registerReplyCallback(ReplyCallback callback) ;

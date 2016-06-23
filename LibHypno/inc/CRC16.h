@@ -9,7 +9,7 @@
 
 namespace HypnoGadget {
 
-uint16 CRC16(const uint8 * data, uint16 bytes);
+uint16_t CRC16(const uint8_t * data, uint16_t bytes);
 
 }; // namespace
 

@@ -56,7 +56,7 @@ namespace HypnoGadget {
 
 // global function to write bytes from the packet code
 // param hides the "this" class, and byte is written
-void IOWriteByte(void * param, uint8 byte); 
+void IOWriteByte(void * param, uint8_t byte); 
 
 /********************* GadgetImpl Section ********************************/
 /*                                                                       */
@@ -77,6 +77,7 @@ public:
 		byteMode_       = GadgetControl::ConsoleMode;
 		consoleSize_    = 10000; // default size
 		::memset(&options_,0,sizeof(HypnoGadget::Options));
+		::memset(frameBuffer_,0,sizeof(frameBuffer_));
 		PacketReset(&packetState_);
 
 		replyCallback_ = ReplyCallback() ;
@@ -85,7 +86,7 @@ public:
 
 	struct VersionInfo
 		{
-		uint8 major_, minor_;
+		uint8_t major_, minor_;
 		VersionInfo(void) : major_(0), minor_(0) {};
 		};
 	struct Visualization
@@ -98,7 +99,7 @@ public:
 		};
 
 	// wrapper for packet data
-	bool PacketSendData(uint8 destination, const uint8 * data, uint16 length)
+	bool PacketSendData(uint8_t destination, const uint8_t * data, uint16_t length)
 		{ // todo - this needs locked?! but cannot lock here else error!
 		bool retval = HypnoGadget::PacketSendData(&packetState_, IOWriteByte, this, destination, data, length);
 		return retval;
@@ -107,18 +108,18 @@ public:
 	GadgetControl::ByteMode byteMode_; // console/packet
 
 	string consoleText_; // string holding console bytes
-	uint32 consoleSize_; // max number of bytes we allow in console string
+	uint32_t consoleSize_; // max number of bytes we allow in console string
 
 	HypnoGadget::Options options_; // local copy - todo - reset it?
 
 	// frame
 	bool obtainedFrame_;    // is there a frame in the buffer?
-	uint8 frameBuffer_[96]; // todo - define size somewhere?
+	uint8_t frameBuffer_[96]; // todo - define size somewhere?
 
 	// return true if a frame ready to read
 	// resets internal flag when read
 	// returns pointer to internal buffer and size of buffer
-	bool GetFrame(uint8 ** buffer, int & size)
+	bool GetFrame(uint8_t ** buffer, int & size)
 		{
 		bool ret = obtainedFrame_;
 		obtainedFrame_ = false;
@@ -141,7 +142,7 @@ void ConsoleLog(std::string & text)
 	}
 
 // only store so many characters (0 for infinite, default 10000)
-void ConsoleReset(uint32 size)
+void ConsoleReset(uint32_t size)
 	{
 	consoleSize_ = size;  // todo clamp text here
 	}
@@ -153,13 +154,13 @@ void ConsoleClear(void)
 	}
 
 /* commands to send to gadget */
-void Login(uint32 val)
+void Login(uint32_t val)
 	{
-	uint8 data[5]={Command::Login};
-	data[1] = static_cast<uint8>(val>>24);
-	data[2] = static_cast<uint8>(val>>16);
-	data[3] = static_cast<uint8>(val>>8);
-	data[4] = static_cast<uint8>(val);
+	uint8_t data[5]={Command::Login};
+	data[1] = static_cast<uint8_t>(val>>24);
+	data[2] = static_cast<uint8_t>(val>>16);
+	data[3] = static_cast<uint8_t>(val>>8);
+	data[4] = static_cast<uint8_t>(val);
 	PacketSendData(0, data, 5);
 	AddACKWatch(packetState_.packetEncodedCRC_,"Login",Command::Login);
 	AddMessageToLog("Login sent");
@@ -167,7 +168,7 @@ void Login(uint32 val)
 
 void Logout(void)
 	{
-	uint8 data[1]={Command::Logout};
+	uint8_t data[1]={Command::Logout};
 	PacketSendData(0, data, sizeof(data));
 	AddMessageToLog("Logout sent");
 	AddACKWatch(packetState_.packetEncodedCRC_,"Logout",Command::Logout);
@@ -176,15 +177,15 @@ void Logout(void)
 
 void GetFrame(void)
 	{
-	uint8 data[1]={Command::GetFrame};
+	uint8_t data[1]={Command::GetFrame};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"GetFrame",Command::GetFrame);
 	AddMessageToLog("GetFrame sent");
 	}
 
-void SetFrame(const uint8 * buffer)
+void SetFrame(const uint8_t * buffer)
 	{
-	uint8 data[97];
+	uint8_t data[97];
 	data[0] = Command::SetFrame;
 	memcpy(data+1,buffer,96);
 	PacketSendData(0, data, 97);
@@ -194,7 +195,7 @@ void SetFrame(const uint8 * buffer)
 
 void FlipFrame(void)
 	{
-	uint8 data[1];
+	uint8_t data[1];
 	data[0] = Command::FlipFrame;
 	PacketSendData(0, data, 1);
 	AddACKWatch(packetState_.packetEncodedCRC_,"FlipFrame",Command::FlipFrame);
@@ -204,15 +205,15 @@ void FlipFrame(void)
 
 void MaxVisIndex(void)
 	{
-	uint8 data[1]={Command::MaxVisIndex};
+	uint8_t data[1]={Command::MaxVisIndex};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"MaxVisIndex",Command::MaxVisIndex);
 	AddMessageToLog("MaxVisIndex sent");
 	}
 
-void SelectVis(uint8 vis)
+void SelectVis(uint8_t vis)
 	{
-	uint8 data[2]={Command::SelectVis,vis};
+	uint8_t data[2]={Command::SelectVis,vis};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"SelectVis",Command::SelectVis);
 	AddMessageToLog("SelectVis sent");
@@ -220,15 +221,15 @@ void SelectVis(uint8 vis)
 
 void MaxTranIndex(void)
 	{
-	uint8 data[1]={Command::MaxTranIndex};
+	uint8_t data[1]={Command::MaxTranIndex};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"MaxTranIndex",Command::MaxTranIndex);
 	AddMessageToLog("MaxTranIndex sent");
 	}
 
-void SelectTran(uint8 trans)
+void SelectTran(uint8_t trans)
 	{
-	uint8 data[2]={Command::SelectTran,trans};
+	uint8_t data[2]={Command::SelectTran,trans};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"SelectTran",Command::SelectTran);
 	AddMessageToLog("SelectTran sent");
@@ -240,12 +241,12 @@ void Options(bool write)
 	{
 	if (false == write)
 		{
-		uint8 data[1]={Command::Options};
+		uint8_t data[1]={Command::Options};
 		PacketSendData(0, data, sizeof(data));
 		}
 	else
 		{
-		uint8 data[sizeof(::Options)];
+		uint8_t data[sizeof(::Options)];
 		memcpy(data,&options_,sizeof(::Options));
 		data[0] = Command::Options;
 		PacketSendData(0, data, sizeof(data));
@@ -256,15 +257,15 @@ void Options(bool write)
 
 void Version(void)
 	{
-	uint8 data[1]={Command::Version};
+	uint8_t data[1]={Command::Version};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"Version",Command::Version);
 	AddMessageToLog("Version sent");
 	}
 
-void Info(uint8 type, uint8 index)
+void Info(uint8_t type, uint8_t index)
 	{
-	uint8 data[3]={Command::Info,type,index};
+	uint8_t data[3]={Command::Info,type,index};
 	PacketSendData(0, data, sizeof(data));
 	lastInfoType_ = type;   // getting this type
 	lastInfoIndex_ = index; // getting this index
@@ -279,7 +280,7 @@ void Info(uint8 type, uint8 index)
 
 void Ping(void)
 	{
-	uint8 data[1]={Command::Ping};
+	uint8_t data[1]={Command::Ping};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"Ping",Command::Ping);
 	AddMessageToLog("Ping sent");
@@ -287,7 +288,7 @@ void Ping(void)
 
 void Reset(void)
 	{
-	uint8 data[1]={Command::Reset};
+	uint8_t data[1]={Command::Reset};
 	PacketSendData(0, data, sizeof(data));
 	AddACKWatch(packetState_.packetEncodedCRC_,"Reset",Command::Reset); // todo- only add those that generate an ACK?
 	AddMessageToLog("Reset sent");
@@ -323,7 +324,6 @@ std::cerr << "lastInfoType_=" << (unsigned)lastInfoType_ << " lastInfoIndex_=" <
 				default :
 					ErrorMessage("Error: unsupported Info command index");
 					break;
-				break;
 				} // switch for Info about device
 			break;
 		case 1 :  // visualization info
@@ -364,17 +364,17 @@ std::cerr << "lastInfoType_=" << (unsigned)lastInfoType_ << " lastInfoIndex_=" <
 	} // Info
 
 // get the count of items loaded
-uint8 GetCount(InfoType type)
+uint8_t GetCount(InfoType type)
 	{
 	if (VisualizationType == type)
-		return static_cast<uint8>(visualizationList_.size());
+		return static_cast<uint8_t>(visualizationList_.size());
 	else if (TransitionType == type)
-		return static_cast<uint8>(transitionList_.size());
+		return static_cast<uint8_t>(transitionList_.size());
 	return 0;
 	}
 
 // get 0 numbered item, return blank string if out of bounds
-void GetName(InfoType type, std::string & name, uint8 index)
+void GetName(InfoType type, std::string & name, uint8_t index)
 	{
 	name = "";
 	if ((VisualizationType == type) && (index < visualizationList_.size()))
@@ -411,15 +411,15 @@ void Update(void)
 	if (false == packetBytes_.empty())
 		{
 		gadgetIO_.WriteBytes(&packetBytes_[0],
-			static_cast<uint16>(packetBytes_.size()));
+			static_cast<uint16_t>(packetBytes_.size()));
 		packetBytes_.resize(0);
 		}
 	Unlock();
 
 
 
-	uint8 buffer[64];
-	uint16 byteCount = 0, bytesUsed = 0;
+	uint8_t buffer[64];
+	uint16_t byteCount = 0, bytesUsed = 0;
 
 	// get any bytes that are ready from the connection, and process
 	byteCount = gadgetIO_.ReadBytes(buffer,64);
@@ -442,16 +442,16 @@ void Update(void)
 			// packet decoder, until no bytes left to feed in
 
 			// pass out any bytes read in
-			uint16 leftBytes;
+			uint16_t leftBytes;
 			leftBytes = PacketDecodeBytes(&packetState_, buffer + bytesUsed, byteCount - bytesUsed);
 			bytesUsed += (byteCount - bytesUsed) - leftBytes; // next location
 
 			// see if a packet is ready, returns true iff one is ready
 			// sets a pointer to the decoded data
 			// if one was ready, resets internals to process the next packet
-			uint8 dest;    // who gets the command
-			uint8 * data;  // data for command
-			uint16 length; // length of data
+			uint8_t dest;    // who gets the command
+			uint8_t * data;  // data for command
+			uint16_t length; // length of data
 			if (true == PacketGetData(&packetState_, &dest, &data, &length))
 				{ // we have a command to process, do it
 				ProcessCommand(dest,data,length);
@@ -493,7 +493,7 @@ string GetCopyright(void)
 	}
 
 // process a single command from the gadget
-void ProcessCommand(uint8 dest, const uint8 * data, uint16 length)
+void ProcessCommand(uint8_t dest, const uint8_t * data, uint16_t length)
 	{
 	if (0 == length)
 		{
@@ -502,7 +502,7 @@ void ProcessCommand(uint8 dest, const uint8 * data, uint16 length)
 		}
 	Command::CommandType type = static_cast<Command::CommandType>(*data++);
 	--length;
-	uint16 crc(0);
+	uint16_t crc(0);
 
 	switch (type)
 		{
@@ -650,14 +650,14 @@ std::cerr << "Ack received: " << text << std::endl;
 			break;
 		}
 
-		std::cerr << "REPLY: " << type << " '" << Command::commandStr(type) << "'" << std::endl ;
+//		std::cerr << "REPLY: " << type << " '" << Command::commandStr(type) << "'" << std::endl ;
 		if (replyCallback_)
 			replyCallback_(type, length+1, crc) ;
 
 	} // ProcessCommand
 
 // add byte to the ones to sent to the physical gadget
-void AddByte(uint8 byte)
+void AddByte(uint8_t byte)
 	{
 	packetBytes_.push_back(byte);
 	}
@@ -688,7 +688,7 @@ bool GetMessage(string & message, int index)
 	}
 
 // get versions after Version called
-void GetVersion(VersionType type, uint8 & major, uint8 & minor)
+void GetVersion(VersionType type, uint8_t & major, uint8_t & minor)
 	{
 	switch (type)
 		{
@@ -717,10 +717,10 @@ private:
 	vector<Visualization> visualizationList_;
 	vector<Transition>    transitionList_;
 	LoginState loginState_;
-	vector<uint8> packetBytes_;
+	vector<uint8_t> packetBytes_;
 
 	// todo - default challenge value, allow setting it
-	uint32 challengeValue_; 
+	uint32_t challengeValue_; 
 
 	/* variables usuable only inside - don't need thread locked */
 	GadgetIO & gadgetIO_; // already threadsafe internally to object
@@ -741,13 +741,13 @@ private:
 		string message_;
 		Command::CommandType command_;
 		} Ack;
-	map<uint16,Ack> ackMap_;
+	map<uint16_t,Ack> ackMap_;
 
 	/* unsorted threading case variables! TODO */
 
 	// what we are asking for with the Info command
-	uint8 lastInfoType_;
-	uint8 lastInfoIndex_;
+	uint8_t lastInfoType_;
+	uint8_t lastInfoIndex_;
 
 	bool optionsLoaded_, optionsDirty_;
 	PacketHandlerState packetState_;
@@ -761,7 +761,7 @@ private:
 
 
 // add item to watch
-void AddACKWatch(uint16 crc, const string & text, Command::CommandType command)
+void AddACKWatch(uint16_t crc, const string & text, Command::CommandType command)
 	{
 	Ack ack;
 	ack.message_ = text;
@@ -769,11 +769,11 @@ void AddACKWatch(uint16 crc, const string & text, Command::CommandType command)
 	ackMap_[crc] = ack;
 	}
 // removes item and returns true if found, else return false and
-bool RemoveACKWatch(uint16 crc, string& text, Command::CommandType & command)
+bool RemoveACKWatch(uint16_t crc, string& text, Command::CommandType & command)
 	{
 	text = "";
 	command = Command::Unknown;
-	map<uint16,Ack>::iterator iter = ackMap_.find(crc);
+	map<uint16_t,Ack>::iterator iter = ackMap_.find(crc);
 	if (ackMap_.end() == iter)
 		return false;
 	// remove it, and return true
@@ -812,7 +812,7 @@ void ErrorMessage(const std::string & msg)
 	}; // class GadgetImpl
 
 // global function to write bytes from the packet code
-void IOWriteByte(void * param, uint8 byte)
+void IOWriteByte(void * param, uint8_t byte)
 	{ // todo - cleaner?
 	GadgetControl::GadgetImpl * pImpl_ = reinterpret_cast<GadgetControl::GadgetImpl*>(param);
 	pImpl_->AddByte(byte);
@@ -839,7 +839,7 @@ GadgetControl::~GadgetControl(void)
 
 
 /* commands to send to gadget */
-void GadgetControl::Login(uint32 val)
+void GadgetControl::Login(uint32_t val)
 	{
 	Lock(); // todo - make lock class that acquires on create, release on destructor, using same lock?!
 	pImpl_->Login(val);
@@ -861,7 +861,7 @@ void GadgetControl::GetFrame(void)
 	Unlock();
 	}
 
-void GadgetControl::SetFrame(const uint8 * buffer)
+void GadgetControl::SetFrame(const uint8_t * buffer)
 	{
 	Lock();
 	pImpl_->SetFrame(buffer);
@@ -883,7 +883,7 @@ void GadgetControl::MaxVisIndex(void)
 	Unlock();
 	}
 
-void GadgetControl::SelectVis(uint8 vis)
+void GadgetControl::SelectVis(uint8_t vis)
 	{
 	Lock();
 	pImpl_->SelectVis(vis);
@@ -897,7 +897,7 @@ void GadgetControl::MaxTranIndex(void)
 	Unlock();
 	}
 
-void GadgetControl::SelectTran(uint8 trans)
+void GadgetControl::SelectTran(uint8_t trans)
 	{
 	Lock();
 	pImpl_->SelectTran(trans);
@@ -920,7 +920,7 @@ void GadgetControl::Version(void)
 	Unlock();
 	}
 
-void GadgetControl::Info(uint8 type, uint8 index)
+void GadgetControl::Info(uint8_t type, uint8_t index)
 	{
 	Lock();
 	pImpl_->Info(type,index);
@@ -985,7 +985,7 @@ void GadgetControl::ConsoleLog(std::string & text)
 	}
 
 // only store so many characters (0 for infinite, which is default)
-void GadgetControl::ConsoleReset(uint32 size)
+void GadgetControl::ConsoleReset(uint32_t size)
 	{
 	Lock();
 	pImpl_->ConsoleReset(size);
@@ -1062,7 +1062,7 @@ std::string GadgetControl::GetCopyright(void)
 	}
 
 // get versions after TODO called
-void GadgetControl::GetVersion(VersionType type, uint8 & major, uint8 & minor)
+void GadgetControl::GetVersion(VersionType type, uint8_t & major, uint8_t & minor)
 	{
 	Lock();
 	pImpl_->GetVersion(type,major,minor);
@@ -1070,15 +1070,15 @@ void GadgetControl::GetVersion(VersionType type, uint8 & major, uint8 & minor)
 	}
 
 // get the count of items loaded
-uint8 GadgetControl::GetCount(InfoType type)
+uint8_t GadgetControl::GetCount(InfoType type)
 	{
 	Lock();
-	uint8 val = pImpl_->GetCount(type);
+	uint8_t val = pImpl_->GetCount(type);
 	Unlock();
 	return val;
 	}
 // get 0 numbered item, return blank string if out of bounds
-void GadgetControl::GetName(InfoType type, std::string & name, uint8 index)
+void GadgetControl::GetName(InfoType type, std::string & name, uint8_t index)
 	{
 	Lock();
 	pImpl_->GetName(type,name,index);
@@ -1088,7 +1088,7 @@ void GadgetControl::GetName(InfoType type, std::string & name, uint8 index)
 // return true if a frame ready to read
 // resets internal flag when read
 // returns pointer to internal buffer and size of buffer
-bool GadgetControl::GetFrame(uint8 ** buffer, int & size)
+bool GadgetControl::GetFrame(uint8_t ** buffer, int & size)
 	{
 	Lock();
 	bool ret = pImpl_->GetFrame(buffer,size);

@@ -71,6 +71,7 @@ Font4x4::Font4x4() :
 {
 	defineUppercase() ;
 	defineLowercase() ;
+	defineNumerals() ;
 	defineSpecial() ;
 
 }
