@@ -1,0 +1,6 @@
+{
+  "name": "Hypnolib",
+  "tagline": "Library and utilities for controlling the HypnoGadget",
+  "body": "# hypnolib\r\nLibrary and utilities for controlling the HypnoGadget http://hypnocube.com/\r\n\r\n_This is an initial import of files to get the project going_\r\n\r\nFor scan status see:\r\n<a href=\"https://scan.coverity.com/projects/sdprice1-hypnolib\">\r\n  <img alt=\"Coverity Scan Build Status\"\r\n       src=\"https://scan.coverity.com/projects/9181/badge.svg\"/>\r\n</a>\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
