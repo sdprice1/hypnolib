@@ -33,6 +33,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #include "Coord.h"
 #include "CoordMap.h"
@@ -57,6 +58,12 @@ public:
 	 * Set all pixels to this colour
 	 */
 	virtual void fill(const Colour& colour) ;
+
+	/**
+	 * Transpose current pixels by the delta Coord shifting the model in xyz space. The clearColour is used to set
+	 * any "empty" pixels left as a result of the shift
+	 */
+	virtual void transpose(const Coord& delta, const Colour& clearColour = Colour::BLACK) ;
 
 	/**
 	 * Set the pixel colours from the packed data. Data is packed with 3 nibbles per pixel. So it takes 3 bytes for 2
@@ -107,6 +114,8 @@ private:
 	std::shared_ptr<CoordMap> mToRawMap ;
 	std::shared_ptr<CoordMap> mFromRawMap ;
 	std::shared_ptr<CoordMap> mPixelMap ;
+
+	mutable std::mutex mMutex ;
 } ;
 
 }

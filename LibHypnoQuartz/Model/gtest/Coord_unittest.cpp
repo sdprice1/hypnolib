@@ -54,3 +54,36 @@ TEST(Coord, basic)
 	EXPECT_EQ(3, c1.z()) ;
 
 }
+
+//-------------------------------------------------------------------------------------------------------------
+TEST(Coord, maths)
+{
+	Coord c0(0, 0, 0) ;
+	Coord c1(1, 2, 3) ;
+	Coord c2(3, 4, 5) ;
+	Coord c3(-1, -2, -3) ;
+
+	Coord c0mc1(c0 - c1) ;
+
+	EXPECT_EQ(-1, c0mc1.x()) ;
+	EXPECT_EQ(-2, c0mc1.y()) ;
+	EXPECT_EQ(-3, c0mc1.z()) ;
+
+	c0mc1 += c2 ;
+
+	EXPECT_EQ(2, c0mc1.x()) ;
+	EXPECT_EQ(2, c0mc1.y()) ;
+	EXPECT_EQ(2, c0mc1.z()) ;
+
+	c0mc1 -= c3 ;
+
+	EXPECT_EQ(3, c0mc1.x()) ;
+	EXPECT_EQ(4, c0mc1.y()) ;
+	EXPECT_EQ(5, c0mc1.z()) ;
+
+	c0mc1 = c2 + c1 ;
+
+	EXPECT_EQ(4, c0mc1.x()) ;
+	EXPECT_EQ(6, c0mc1.y()) ;
+	EXPECT_EQ(8, c0mc1.z()) ;
+}

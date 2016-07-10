@@ -38,4 +38,3 @@ addLib(libs LibHypnoQuartz)
 
 ## Executable
 addExecutable(${program} "${libs}" ${SOURCES})
-##target_link_libraries(${program} ncurses)

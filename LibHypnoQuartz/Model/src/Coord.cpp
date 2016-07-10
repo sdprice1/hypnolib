@@ -48,7 +48,7 @@ Coord::Coord() :
 }
 
 //-------------------------------------------------------------------------------------------------------------
-Coord::Coord(unsigned x, unsigned y) :
+Coord::Coord(int x, int y) :
 	mX(x),
 	mY(y),
 	mZ(0)
@@ -56,7 +56,7 @@ Coord::Coord(unsigned x, unsigned y) :
 }
 
 //-------------------------------------------------------------------------------------------------------------
-Coord::Coord(unsigned x, unsigned y, unsigned z) :
+Coord::Coord(int x, int y, int z) :
 	mX(x),
 	mY(y),
 	mZ(z)
@@ -69,19 +69,49 @@ Coord::~Coord()
 }
 
 //-------------------------------------------------------------------------------------------------------------
-unsigned Coord::x() const
+int Coord::x() const
 {
 	return mX ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-unsigned Coord::y() const
+int Coord::y() const
 {
 	return mY ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-unsigned Coord::z() const
+int Coord::z() const
 {
 	return mZ ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+const Coord HypnoQuartz::Coord::operator +(const Coord& rhs) const
+{
+	return Coord(*this) += rhs ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+const Coord HypnoQuartz::Coord::operator -(const Coord& rhs) const
+{
+	return Coord(*this) -= rhs ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+Coord& HypnoQuartz::Coord::operator +=(const Coord& rhs)
+{
+	mX += rhs.mX ;
+	mY += rhs.mY ;
+	mZ += rhs.mZ ;
+	return *this ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+Coord& HypnoQuartz::Coord::operator -=(const Coord& rhs)
+{
+	mX -= rhs.mX ;
+	mY -= rhs.mY ;
+	mZ -= rhs.mZ ;
+	return *this ;
 }

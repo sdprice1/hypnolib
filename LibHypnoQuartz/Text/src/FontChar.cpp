@@ -42,7 +42,7 @@ using namespace HypnoQuartz ;
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-static const bool null(false) ;
+static const uint8_t null(0) ;
 
 //=============================================================================================================
 // PUBLIC
@@ -116,7 +116,7 @@ bool FontChar::getPixel(unsigned x, unsigned y) const
 	if (index > mMaxIndex)
 		return false ;
 
-	return mPixels[index] ;
+	return (mPixels[index] == 0) ;
 }
 
 
@@ -153,12 +153,12 @@ FontChar::const_iterator FontChar::cend() const
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-const bool& FontChar::operator [](unsigned index) const
+const uint8_t& FontChar::operator [](unsigned index) const
 {
 	if (index > mMaxIndex)
 		return null ;
 
-	return std::move(mPixels[index]) ;
+	return mPixels[index] ;
 }
 
 //-------------------------------------------------------------------------------------------------------------

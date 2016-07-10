@@ -19,6 +19,7 @@
 ## Library Source
 add_sources (SOURCES
     src/Path.cpp
+    src/Thread.cpp
     src/TimeUtils.cpp
 )
 
@@ -32,6 +33,7 @@ addCppcheck(common)
 	include_directories(.)
 	set(gtest_src
 		gtest/Path_unittest.cpp
+		gtest/Thread_unittest.cpp
 		gtest/test.cpp
 	)
 	addGtest(common_GTEST "" ${gtest_src})

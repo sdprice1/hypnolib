@@ -303,7 +303,7 @@ void Info(const string & msg)
 	AddMessageToLog(temp);
 #endif
 
-std::cerr << "lastInfoType_=" << (unsigned)lastInfoType_ << " lastInfoIndex_=" << (unsigned)lastInfoIndex_ << std::endl ;
+//std::cerr << "lastInfoType_=" << (unsigned)lastInfoType_ << " lastInfoIndex_=" << (unsigned)lastInfoIndex_ << std::endl ;
 	switch (lastInfoType_)
 		{
 		case 0 :  // info about device
@@ -532,7 +532,7 @@ void ProcessCommand(uint8_t dest, const uint8_t * data, uint16_t length)
 				msg = "Ack received: UNKNOWN";
 			}
 			AddMessageToLog(msg);
-std::cerr << "Ack received: " << text << std::endl;
+//std::cerr << "Ack received: " << text << std::endl;
 
 			if (Command::Login == command)
 				{
@@ -563,12 +563,12 @@ std::cerr << "Ack received: " << text << std::endl;
 			if (length >= 1)
 			{
 				ErrorMessage(string("Error packet: ") + errMsgs_[*data++]);
-				std::cerr << "Error packet: " << errMsgs_[*data++] << std::endl ;
+//				std::cerr << "Error packet: " << errMsgs_[*data++] << std::endl ;
 			}
 			else
 			{
 				ErrorMessage("Error packet: ???");
-				std::cerr << "Error packet: ???" << std::endl ;
+//				std::cerr << "Error packet: ???" << std::endl ;
 			}
 		}
 			break;
@@ -589,7 +589,7 @@ std::cerr << "Ack received: " << text << std::endl;
 			length++;
 			if (length != sizeof(::Options)) 
 			{
-				std::cerr << "Options size=" << length << " expected " << sizeof(::Options) << std::endl ;
+//				std::cerr << "Options size=" << length << " expected " << sizeof(::Options) << std::endl ;
 				ErrorMessage("Error: Options received, wrong length");
 				return ;
 			}

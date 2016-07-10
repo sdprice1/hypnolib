@@ -30,7 +30,7 @@
 #ifndef HYPNODEMO_INC_CUBEANIM_H_
 #define HYPNODEMO_INC_CUBEANIM_H_
 
-#include <memory.h>
+#include <memory>
 #include "AnimCallback.h"
 
 namespace HypnoQuartz {

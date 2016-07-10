@@ -88,5 +88,3 @@ TEST(FontChar, iterator)
 	}
 }
 
-
-

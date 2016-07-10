@@ -30,7 +30,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "gtest/gtest.h"
+#include "Gtesting.h"
 
 #include "Path.h"
 
@@ -41,33 +41,7 @@ using namespace HypnoQuartz ;
 //=============================================================================================================
 
 //===================================================================================================================
-class PathTest : public ::testing::Test
-{
-public:
-
-    /*! @brief Setup the test
-     */
-    virtual void SetUp()
-    {
-    	const ::testing::TestInfo* const test_info =
-    	  ::testing::UnitTest::GetInstance()->current_test_info();
-
-    	std::cout << std::endl << "*** " << test_info->test_case_name() << " Tests ***" <<  std::endl;
-    	std::cout << test_info->name() << " - START" <<  std::endl;
-
-    }
-
-    /*! @brief Tear down the test
-     */
-    virtual void TearDown()
-    {
-
-    }
-
-
-};
-
-
+class PathTest : public Gtesting {};
 
 
 //===================================================================================================================

@@ -40,6 +40,7 @@
 #include <condition_variable>
 
 #include "IAnimatorCallback.h"
+#include "Debuggable.h"
 
 namespace HypnoQuartz {
 
@@ -47,7 +48,7 @@ namespace HypnoQuartz {
 /*!
  * \class Animator
  */
-class Animator {
+class Animator : public Debuggable {
 public:
 	Animator() ;
 	virtual ~Animator() ;

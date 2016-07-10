@@ -22,6 +22,8 @@ node {
 			// Run the build
 			stage 'Build'
 	        sh "make cppcheck"
+	        sh "make clean"
+	        sh "make"
 	
 			// Run tests
 			stage 'Test'

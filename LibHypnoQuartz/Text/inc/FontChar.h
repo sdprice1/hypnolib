@@ -22,7 +22,10 @@
  * \date      9 Jun 2016
  * \author    sdprice1
  *
- * \details   
+ * \details   Stores an XY plane of boolean pixels for an image that represents a character
+ *
+ * NOTE: This class would ideally use a vector of bool, but that isn't really a vector and causes problems with iterators
+ * (see http://www.gotw.ca/publications/mill09.htm for the gory details)
  *
  */
 
@@ -41,12 +44,12 @@ namespace HypnoQuartz {
  */
 class FontChar {
 public:
-    typedef bool   value_type;
-    typedef bool   difference_type;
-    typedef bool*  pointer;
-    typedef bool&  reference;
-    typedef const bool*  const_pointer;
-    typedef const bool&  const_reference;
+    typedef uint8_t   value_type;
+    typedef uint8_t   difference_type;
+    typedef uint8_t*  pointer;
+    typedef uint8_t&  reference;
+    typedef const uint8_t*  const_pointer;
+    typedef const uint8_t&  const_reference;
 
 
 	/**
@@ -121,8 +124,6 @@ public:
 		const_pointer operator->() const;
 //		const_reference operator[](std::size_type index) const; //optional
 
-//		bool operator bool() const ;
-
 	private:
 		const FontChar* mFc ;
 		unsigned mIndex ;
@@ -138,7 +139,7 @@ public:
 	const_iterator cend() const ;
 
 protected:
-	const bool& operator [](unsigned index) const ;
+	const uint8_t& operator [](unsigned index) const ;
 	unsigned toIndex(unsigned x, unsigned y) const ;
 
 private:
@@ -146,8 +147,7 @@ private:
 	unsigned mHeight ;
 	unsigned mMaxIndex ;
 	char mCc ;
-//	std::vector<std::vector<bool>> mPixels ;
-	std::vector<bool> mPixels ;
+	std::vector<uint8_t> mPixels ;
 } ;
 
 }

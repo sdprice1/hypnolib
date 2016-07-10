@@ -101,22 +101,19 @@ endmacro (getCachedEnvVar)
 ##----------------------------------------------------------------------------------------------------------------------
 ## Set up link flags
 set (LINK_FLAGS "")
-#set (LINK_FLAGS "-static-libstdc++")
-#set (LINK_FLAGS "${LINK_FLAGS} -Wl,-rpath -Wl,${DEVTOOLS_INSTALLDIR}/lib")
-#set (LINK_FLAGS "${LINK_FLAGS} -Wl,-rpath -Wl,${TOOLCHAIN_DIR}/${TOOLCHAIN_TARGET}/lib64")
-#set (LINK_FLAGS "${LINK_FLAGS} -Wl,-dynamic-linker,${TOOLCHAIN_SYSROOT}/lib/ld-linux-x86-64.so.2")
 
 ##----------------------------------------------------------------------------------------------------------------------
 ## Set up compiler flags
 set (COMPILE_FLAGS "-O0 -g3")
-#set (COMPILE_FLAGS "${COMPILE_FLAGS} -DOFF_TARGET")
-#set (COMPILE_FLAGS "${COMPILE_FLAGS} -DOFFTARGET_CFG_DIR='\"${GITDIR}/hardware/common/fpga/cfg\"'") # used by fpga emulator
+
+if (TEST_TTY)
+	set (COMPILE_FLAGS "${COMPILE_FLAGS} -DTEST_TTY")
+endif()
 
 ##----------------------------------------------------------------------------------------------------------------------
 ## Common compile settings
 
 # C Compiler 
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -fmessage-length=0 ${COMPILE_FLAGS}")
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fmessage-length=0 ${COMPILE_FLAGS}")
 
 # C++ Compiler 
@@ -131,6 +128,7 @@ set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  ${LINK_FLAGS} ")
 
 # Allow testing for host builds
 enable_testing()
+
 
 
 

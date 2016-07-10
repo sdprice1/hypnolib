@@ -43,6 +43,7 @@
 #include "GadgetTTY.h"
 #include "Command.h"
 #include "Gadget.h"
+#include "Debuggable.h"
 
 namespace HypnoQuartz {
 
@@ -51,7 +52,7 @@ class ReplyEvent ;
 /*!
  * \class GadgetQuartz
  */
-class GadgetQuartz {
+class GadgetQuartz : public Debuggable {
 public:
 	GadgetQuartz() ;
 	virtual ~GadgetQuartz() ;
@@ -78,6 +79,11 @@ public:
 	bool writeFrame(const std::vector<uint8_t >& image) ;
 	bool writeFrame(const uint8_t * image) ;
 
+	// write the new frame
+	bool setFrame(const std::vector<uint8_t >& image) ;
+
+	// switch frame buffers
+	bool flipFrame() ;
 
 private:
 	// Callback for whenever a reply is received

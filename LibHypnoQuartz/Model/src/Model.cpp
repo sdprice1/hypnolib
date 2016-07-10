@@ -69,9 +69,30 @@ void Model::clear()
 //-------------------------------------------------------------------------------------------------------------
 void Model::fill(const Colour& colour)
 {
+	std::unique_lock<std::mutex> lock(mMutex) ;
 	std::fill(mPixels.begin(), mPixels.end(), colour) ;
 }
 
+//-------------------------------------------------------------------------------------------------------------
+void Model::transpose(const Coord& delta, const Colour& clearColour)
+{
+	std::vector<Colour> transposed(mMaxIndex+1, clearColour) ;
+	std::unique_lock<std::mutex> lock(mMutex) ;
+
+	// Transfer data
+	for (unsigned index=0; index <= mMaxIndex; ++index)
+	{
+		Coord trans(fromIndex(index) + delta) ;
+		if (!checkCoord(trans))
+			continue ;
+
+		transposed[toIndex(trans)] = mPixels[index] ;
+	}
+
+
+	using std::swap ;
+	swap(mPixels, transposed) ;
+}
 
 //-------------------------------------------------------------------------------------------------------------
 bool Model::fromPacked(const std::vector<uint8_t >& packedData)
@@ -83,6 +104,8 @@ bool Model::fromPacked(const std::vector<uint8_t >& packedData)
 
 	// Start with cleared model
 	clear() ;
+
+	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Transfer data
 	auto iter(packedData.begin()) ;
@@ -129,6 +152,8 @@ std::vector<uint8_t > Model::toPacked() const
 {
 	std::vector<uint8_t > packed ;
 	packed.reserve( (mMaxIndex+1) * 3 / 2 ) ;
+
+	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Need to work from the raw coords to internal coords
 	uint8_t  byte ;
@@ -180,6 +205,8 @@ std::vector<uint8_t > Model::toPacked() const
 //-------------------------------------------------------------------------------------------------------------
 bool Model::setPixel(const Coord& coord, const Colour& colour)
 {
+	std::unique_lock<std::mutex> lock(mMutex) ;
+
 	Coord mapped(coord) ;
 	if (mPixelMap)
 		mapped = mPixelMap->translate(coord) ;
@@ -195,6 +222,7 @@ bool Model::setPixel(const Coord& coord, const Colour& colour)
 //-------------------------------------------------------------------------------------------------------------
 void Model::setCoordMap(std::shared_ptr<CoordMap> coordMap)
 {
+	std::unique_lock<std::mutex> lock(mMutex) ;
 	mPixelMap = coordMap ;
 }
 
@@ -217,13 +245,22 @@ void Model::setFromRawMap(std::shared_ptr<CoordMap> fromRawMap)
 //-------------------------------------------------------------------------------------------------------------
 bool Model::checkCoord(const Coord& coord)
 {
-	if (coord.x() >= mWidth)
+	if (coord.x() < 0)
 		return false ;
 
-	if (coord.y() >= mHeight)
+	if (coord.y() < 0)
 		return false ;
 
-	if (coord.z() >= mDepth)
+	if (coord.z() < 0)
+		return false ;
+
+	if ( static_cast<unsigned>(coord.x()) >= mWidth)
+		return false ;
+
+	if ( static_cast<unsigned>(coord.y()) >= mHeight)
+		return false ;
+
+	if ( static_cast<unsigned>(coord.z()) >= mDepth)
 		return false ;
 
 	return true ;
@@ -246,3 +283,4 @@ unsigned HypnoQuartz::Model::toIndex(const Coord& coord) const
 {
 	return (coord.z() * mHeight * mWidth) + (coord.y() * mWidth) + coord.x() ;
 }
+

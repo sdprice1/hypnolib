@@ -22,7 +22,10 @@
  * \date      20 Jun 2016
  * \author    sdprice1
  *
- * \details   
+ * \details   x,y,z coordinate object. If z value is not specified it will default to 0.
+ *
+ * 			The coordinate components may be negative (either after a mathematical operation or
+ * 			after being directly set). The application must determine how to handle thee negative values.
  *
  */
 
@@ -39,21 +42,26 @@ namespace HypnoQuartz {
 class Coord {
 public:
 	Coord() ;
-	Coord(unsigned x, unsigned y) ;
-	Coord(unsigned x, unsigned y, unsigned z) ;
+	Coord(int x, int y) ;
+	Coord(int x, int y, int z) ;
 	virtual ~Coord() ;
+
+	const Coord operator+(const Coord& rhs) const ;
+	const Coord operator-(const Coord& rhs) const ;
+	Coord& operator+=(const Coord& rhs) ;
+	Coord& operator-=(const Coord& rhs) ;
 
 	/**
 	 * Accessors
 	 */
-	unsigned x() const ;
-	unsigned y() const ;
-	unsigned z() const ;
+	int x() const ;
+	int y() const ;
+	int z() const ;
 
 private:
-	unsigned mX ;
-	unsigned mY ;
-	unsigned mZ ;
+	int mX ;
+	int mY ;
+	int mZ ;
 } ;
 
 }

@@ -81,6 +81,7 @@ const unsigned REPLY_DELAY_MSECS{1000} ;
 
 //-------------------------------------------------------------------------------------------------------------
 GadgetQuartz::GadgetQuartz() :
+	Debuggable("GadgetQuartz"),
 	mGadget(),
 	mGadgetTty(),
 	mGadgetLock(),
@@ -124,28 +125,27 @@ bool GadgetQuartz::disconnect()
 //-------------------------------------------------------------------------------------------------------------
 bool GadgetQuartz::doLogin()
 {
-	std::cerr << "Login()" << std::endl ;
+//	debugVerbose << "Login()" << std::endl ;
 
 	for (unsigned retry=1; retry <= 10; ++retry)
 	{
-		std::cerr << TimeUtils::timestamp() << " CMD: Login" << std::endl ;
+		debugNormal << TimeUtils::timestamp() << " CMD: Login" << std::endl ;
 		mGadget->Login();
-//		if (!waitReply(Command::Ack, REPLY_DELAY_MSECS))
 		if (!waitReply(Command::Login, REPLY_DELAY_MSECS))
 			continue ;
 
 		if (GadgetControl::LoggedIn == mGadget->GetState())
 		{
-			std::cerr << "Login() - OK" << std::endl ;
+//			debugVerbose << "Login() - OK" << std::endl ;
 			return true;
 		}
 
 		// failed to login - logout and retry
-		std::cerr << "Login() - RETRY" << std::endl ;
+//		debugVerbose << "Login() - RETRY" << std::endl ;
 		doLogout() ;
 	}
 
-	std::cerr << "Login() - FAILED" << std::endl ;
+//	debugVerbose << "Login() - FAILED" << std::endl ;
 	return false;
 
 }
@@ -154,7 +154,6 @@ bool GadgetQuartz::doLogin()
 bool GadgetQuartz::doLogout()
 {
 	mGadget->Logout();
-//	waitReply(Command::Ack, 100) ;
 	waitReply(Command::Logout, 100) ;
 	return true ;
 }
@@ -169,7 +168,7 @@ bool GadgetQuartz::getInfo()
 
 	// gets device info, visualisation list, transitions list, and then the options
 
-std::cerr << TimeUtils::timestamp() << " CMD: getInfo(0,0)" << std::endl ;
+debugNormal << TimeUtils::timestamp() << " CMD: getInfo(0,0)" << std::endl ;
 	mGadget->Info(0,0); // kick off the process
 
 	// Keep waiting for replies until we've gathered all of the info
@@ -179,7 +178,7 @@ std::cerr << TimeUtils::timestamp() << " CMD: getInfo(0,0)" << std::endl ;
 		uint8_t vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
 		uint8_t transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
 
-std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
+debugNormal << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
 
 		// when we time out we're done
 		if (!ok)
@@ -191,21 +190,21 @@ std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount
 	uint8_t vizCount = mGadget->GetCount(GadgetControl::InfoType::VisualizationType) ;
 	uint8_t transCount = mGadget->GetCount(GadgetControl::InfoType::TransitionType) ;
 
-std::cerr << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
+debugNormal << "VIZ: " << (unsigned)vizCount << " TRANS: " << (unsigned)transCount << std::endl ;
 
-	std::cerr << "Got info" << std::endl ;
+	debugNormal << "Got info" << std::endl ;
 	for (uint8_t viz=0; viz < vizCount; ++viz)
 	{
 		std::string name ;
 		mGadget->GetName(GadgetControl::InfoType::VisualizationType, name, viz);
-		std::cerr << (unsigned)viz << ": " << name << std::endl ;
+		debugNormal << (unsigned)viz << ": " << name << std::endl ;
 	}
 
 	for (uint8_t trans=0; trans < transCount; ++trans)
 	{
 		std::string name ;
 		mGadget->GetName(GadgetControl::InfoType::TransitionType, name, trans);
-		std::cerr << (unsigned)trans << ": " << name << std::endl ;
+		debugNormal << (unsigned)trans << ": " << name << std::endl ;
 	}
 
 	return true ;
@@ -220,7 +219,7 @@ bool GadgetQuartz::getOptions(HypnoGadget::Options& opts)
 	mGadget->SetOptions(opts) ;
 
 	// now send the command to read the options
-	std::cerr << TimeUtils::timestamp() << " CMD: getOptions()" << std::endl ;
+	debugNormal << TimeUtils::timestamp() << " CMD: getOptions()" << std::endl ;
 	mGadget->Options(false);
 
 	// wait for reply packet
@@ -230,11 +229,11 @@ bool GadgetQuartz::getOptions(HypnoGadget::Options& opts)
 	mGadget->GetOptions(opts) ;
 	if (opts.optionsVersion_ == OPTIONS_VERSION)
 	{
-		std::cerr << "Options() - OK" << std::endl ;
+		debugNormal << "Options() - OK" << std::endl ;
 		return true;
 	}
 
-	std::cerr << "Options() - FAILED" << std::endl ;
+	debugNormal << "Options() - FAILED" << std::endl ;
 	return false;
 }
 
@@ -243,7 +242,7 @@ bool GadgetQuartz::getOptions(HypnoGadget::Options& opts)
 bool GadgetQuartz::writeFrame(const uint8_t * image)
 {
 	// send the image
-	std::cerr << TimeUtils::timestamp() << " CMD: SetFrame" << std::endl ;
+	debugNormal << TimeUtils::timestamp() << " CMD: SetFrame" << std::endl ;
 	mGadget->SetFrame(image);
 
 //	// wait for reply packet
@@ -251,7 +250,7 @@ bool GadgetQuartz::writeFrame(const uint8_t * image)
 //		return false ;
 
 	// show the image
-	std::cerr << TimeUtils::timestamp() << " CMD: FlipFrame" << std::endl ;
+	debugNormal << TimeUtils::timestamp() << " CMD: FlipFrame" << std::endl ;
 	mGadget->FlipFrame();
 
 //	// wait for reply packet
@@ -267,6 +266,35 @@ bool GadgetQuartz::writeFrame(const std::vector<uint8_t >& image)
 	return writeFrame(&image[0]) ;
 }
 
+//-------------------------------------------------------------------------------------------------------------
+bool GadgetQuartz::setFrame(const std::vector<uint8_t>& image)
+{
+	// send the image
+	debugNormal << TimeUtils::timestamp() << " CMD: SetFrame" << std::endl ;
+	mGadget->SetFrame(&image[0]);
+
+//	// wait for reply packet
+//	if (!waitReply(Command::SetFrame, REPLY_DELAY_MSECS))
+//		return false ;
+
+	return true ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+bool GadgetQuartz::flipFrame()
+{
+	// show the image
+	debugNormal << TimeUtils::timestamp() << " CMD: FlipFrame" << std::endl ;
+	mGadget->FlipFrame();
+
+//	// wait for reply packet
+//	if (!waitReply(Command::FlipFrame, REPLY_DELAY_MSECS))
+//		return false ;
+
+	return true ;
+}
+
+
 //=============================================================================================================
 // PRIVATE THREAD
 //=============================================================================================================
@@ -278,7 +306,7 @@ void GadgetQuartz::threadRun()
 	{
 		TimeUtils::msSleep(TICK_MSECS) ;
 
-//std::cerr << "GadgetQuartz::threadRun()" << std::endl ;
+//debugVerbose << "GadgetQuartz::threadRun()" << std::endl ;
 
 		// Update gadget
 		mGadget->Update();
@@ -296,7 +324,7 @@ void GadgetQuartz::threadRun()
 		std::string error ;
 		if (mGadget->Error(error))
 		{
-			std::cerr << "ERROR: " << error << std::endl ;
+			debugNormal << "ERROR: " << error << std::endl ;
 		}
 
 	}
@@ -309,7 +337,7 @@ void GadgetQuartz::threadRun()
 //-------------------------------------------------------------------------------------------------------------
 void GadgetQuartz::replyCallback(Command::CommandType type, uint16_t  length, uint16_t  crc)
 {
-	std::cerr << TimeUtils::timestamp() << " REPLY: " << type << " '" << Command::commandStr(type) << "'" << std::endl ;
+	debugNormal << TimeUtils::timestamp() << " REPLY: " << type << " '" << Command::commandStr(type) << "'" << std::endl ;
 
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mReplyEvents.push(std::make_shared<ReplyEvent>(type, length, crc)) ;
@@ -319,7 +347,7 @@ void GadgetQuartz::replyCallback(Command::CommandType type, uint16_t  length, ui
 //-------------------------------------------------------------------------------------------------------------
 bool GadgetQuartz::waitReply(Command::CommandType type)
 {
-	std::cerr << "waitReply type=" << type << std::endl ;
+//	debugVerbose << "waitReply type=" << type << std::endl ;
 
 	return waitReply(std::set<Command::CommandType>({type})) ;
 }
@@ -327,7 +355,7 @@ bool GadgetQuartz::waitReply(Command::CommandType type)
 //-------------------------------------------------------------------------------------------------------------
 bool GadgetQuartz::waitReply(Command::CommandType type, unsigned timeoutMs)
 {
-	std::cerr << "waitReply type=" << type << " timeout=" << timeoutMs << std::endl ;
+//	debugVerbose << "waitReply type=" << type << " timeout=" << timeoutMs << std::endl ;
 
 	return waitReply(std::set<Command::CommandType>({type}), timeoutMs) ;
 }
@@ -360,7 +388,7 @@ bool GadgetQuartz::_waitReply(const std::set<Command::CommandType>& types, WaitF
 	{
 		if (!wait(lock))
 		{
-			std::cerr << "waitReply timed out" << std::endl ;
+			debugNormal << "waitReply timed out" << std::endl ;
 			return false ;
 		}
 
@@ -370,7 +398,7 @@ bool GadgetQuartz::_waitReply(const std::set<Command::CommandType>& types, WaitF
 			mReplyEvents.pop() ;
 			if (types.find(event->mType) != types.end())
 			{
-				std::cerr << "waitReply DONE" << std::endl ;
+				debugNormal << "waitReply DONE" << std::endl ;
 				return true ;
 			}
 		}

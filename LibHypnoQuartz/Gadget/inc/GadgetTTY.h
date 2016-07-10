@@ -8,6 +8,7 @@
 #include <condition_variable>
 
 #include "Gadget.h"  // the gadget interface
+#include "Debuggable.h"
 
 namespace HypnoQuartz {
 
@@ -22,7 +23,7 @@ public:
 
 /* The second class handles reading and writing bytes from the serial port.
 */
-class GadgetTTY : public HypnoGadget::GadgetIO
+class GadgetTTY : public HypnoGadget::GadgetIO, public Debuggable
 {
 public:
 	// default constructor
@@ -53,11 +54,6 @@ public:
 
 	// RX buffer empty
 	bool isRxDone() ;
-
-public:
-	// Debug
-	static void dump(const std::string& msg, const uint8_t  * buffer, uint16_t  dataSize);
-
 
 public:
 	// HypnoGadget::GadgetIO interface

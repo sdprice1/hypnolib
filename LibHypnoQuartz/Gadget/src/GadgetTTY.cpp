@@ -61,6 +61,7 @@ const unsigned BUFF_SIZE{8192} ;
 
 //-------------------------------------------------------------------------------------------------------------
 GadgetTTY::GadgetTTY() :
+	Debuggable("GadgetTTY"),
 	mRun(true),
 	mFd(-1),
 	mTxBuffer(),
@@ -87,7 +88,6 @@ bool GadgetTTY::Open(const std::string& portName)
 	Close() ;
 
 	// determine which type of open to use
-//	if (portName.find("/dev/tty") == 0)
 	if (portName.compare(0, 8, "/dev/tty") == 0)
 		return ttyOpen(portName) ;
 
@@ -98,24 +98,23 @@ bool GadgetTTY::Open(const std::string& portName)
 //-------------------------------------------------------------------------------------------------------------
 bool GadgetTTY::waitOpen(const std::string& portName)
 {
-std::cerr << "GadgetTTY::waitOpen(" << portName << ")" << std::endl ;
+	debugNormal << "GadgetTTY::waitOpen(" << portName << ")" << std::endl ;
 
 	// Ensure any existing connection is closed first
 	Close() ;
 
 	// determine which type of open to use
-//	if (portName.find("/dev/tty") != 0)
 	if (portName.compare(0, 8, "/dev/tty") != 0)
 		return genericOpen(portName) ;
 
 	// Wait here indefinitely until device becomes available
 	while (!Path::exists(portName))
 	{
-		std::cerr << " * waiting for " << portName << " ..." << std::endl ;
+		debugNormal << " * waiting for " << portName << " ..." << std::endl ;
 		sleep(1) ;
 	}
 
-	std::cerr << " * " << portName << " available, connecting..." << std::endl ;
+	debugNormal << " * " << portName << " available, connecting..." << std::endl ;
 
 	// try to open the device direct
 	int fd = -1 ;
@@ -125,7 +124,7 @@ std::cerr << "GadgetTTY::waitOpen(" << portName << ")" << std::endl ;
 
 		if (fd < 0)
 		{
-			std::cerr << " * * Failed to open " << portName << " error=" << errno << std::endl ;
+			debugNormal << " * * Failed to open " << portName << " error=" << errno << std::endl ;
 			sleep(1) ;
 		}
 	}
@@ -139,7 +138,7 @@ std::cerr << "GadgetTTY::waitOpen(" << portName << ")" << std::endl ;
 //-------------------------------------------------------------------------------------------------------------
 void GadgetTTY::Close(void)
 {
-std::cerr << "GadgetTTY::Close()" << std::endl ;
+debugNormal << "GadgetTTY::Close()" << std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	if (mFd > 0)
@@ -147,7 +146,7 @@ std::cerr << "GadgetTTY::Close()" << std::endl ;
 
 	mFd = -1 ;
 
-std::cerr << "GadgetTTY::Close() - DONE" << std::endl ;
+debugNormal << "GadgetTTY::Close() - DONE" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -166,7 +165,7 @@ int GadgetTTY::readNoBlocking(uint8_t * buffer, uint16_t  length)
 //-------------------------------------------------------------------------------------------------------------
 int GadgetTTY::read(uint8_t * buffer, uint16_t  length)
 {
-	std::cout << "read " << length << " bytes ... " << std::endl ;
+//	std::cout << "read " << length << " bytes ... " << std::endl ;
 
 	int bytesRead(0) ;
 	{
@@ -178,7 +177,7 @@ int GadgetTTY::read(uint8_t * buffer, uint16_t  length)
 
 		if (mRxBuffer.empty())
 		{
-			std::cerr << "Error: Reading from serial port failed.\n";
+			debugNormal << "Error: Reading from serial port failed.\n";
 			return 0;
 		}
 
@@ -190,7 +189,7 @@ int GadgetTTY::read(uint8_t * buffer, uint16_t  length)
 		mRxBuffer.erase(mRxBuffer.begin(), mRxBuffer.begin()+bytesRead) ;
 	}
 
-	dump("Read", buffer, bytesRead) ;
+//	dump("Read", buffer, bytesRead) ;
 
 	return bytesRead;
 }
@@ -223,7 +222,7 @@ uint16_t  GadgetTTY::ReadBytes(uint8_t  * buffer, uint16_t  length)
 //-------------------------------------------------------------------------------------------------------------
 void GadgetTTY::WriteBytes(const uint8_t  * buffer, uint16_t  length)
 {
-	dump("Writing", buffer, length) ;
+//	dump("Writing", buffer, length) ;
 
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mTxBuffer.insert(mTxBuffer.end(), buffer, buffer+length) ;
@@ -234,78 +233,6 @@ void GadgetTTY::WriteBytes(const uint8_t  * buffer, uint16_t  length)
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-void GadgetTTY::dump(const std::string& msg, const uint8_t  * buffer, uint16_t  dataSize)
-{
-	std::cout << "=v========================================" << std::endl ;
-	std::cout << "== " << msg << " == " << std::endl ;
-
-	std::stringstream addSs ;
-	std::stringstream dataSs ;
-	std::string prevData ;
-	std::string prevAscii ;
-	bool abbrev{false} ;
-
-	for (unsigned idx=0; idx < dataSize; )
-	{
-		addSs.str("") ;
-		addSs << "0x" << std::setfill('0') << std::setw(4) << std::hex <<
-				idx <<
-				std::dec << "  " ;
-
-		std::string ascii(16, ' ') ;
-		unsigned byte(0) ;
-		for (; byte < 16 && idx < dataSize; ++byte, ++idx, ++buffer)
-		{
-			dataSs << "0x" << std::setfill('0') << std::setw(2) << std::hex <<
-					(unsigned)*buffer <<
-					std::dec << " " ;
-
-			if (byte == 7)
-				dataSs << " " ;
-
-			if (isprint(*buffer))
-				ascii[byte] = (char)*buffer ;
-			else
-				ascii[byte] = '.' ;
-		}
-		for (; byte < 16; ++byte)
-		{
-			if (byte == 7)
-				dataSs << " " ;
-			dataSs << "     " ;
-		}
-
-		// check to see if this data is same as previous
-		bool newAbbrev(false) ;
-		if (dataSs.str() == prevData)
-			newAbbrev = true ;
-
-		// show we've been abbreviating if coming out of abbreviation
-		if (abbrev && !newAbbrev)
-			std::cout << "***                                                                                        ***" << std::endl ;
-
-		// Don't output if currently abbreviating
-		if (!newAbbrev)
-			std::cout << addSs.str() << dataSs.str() << "  |" << ascii << "|" << std::endl ;
-
-		prevData = dataSs.str() ;
-		prevAscii = ascii ;
-		abbrev = newAbbrev ;
-		dataSs.str("") ;
-	}
-
-	// show we've been abbreviating if we still are
-	if (abbrev)
-	{
-		std::cout << "***                                                                                        ***" << std::endl ;
-		std::cout << addSs.str() << prevData << "  |" << prevAscii << "|" << std::endl ;
-	}
-
-	std::cout << "=^========================================" << std::endl ;
-}
-
-
-//-------------------------------------------------------------------------------------------------------------
 bool GadgetTTY::ttyOpen(const std::string& portName)
 {
 	std::unique_lock<std::mutex> lock(mMutex) ;
@@ -314,7 +241,7 @@ bool GadgetTTY::ttyOpen(const std::string& portName)
 	if (mFd <0)
 	{
 		char buff[512] ;
-		std::cerr << "Error: could not open port " << portName <<
+		debugNormal << "Error: could not open port " << portName <<
 				" : " << strerror_r(errno, buff, sizeof(buff)) <<
 				" (" << errno << ")" <<
 				std::endl;
@@ -392,14 +319,14 @@ bool GadgetTTY::ttyOpen(const std::string& portName)
 	if (tcsetattr(mFd,TCSANOW,&newtio) != 0)
 	{
 		char buff[512] ;
-		std::cerr << "Error: unable to set attributes on port " << portName <<
+		debugNormal << "Error: unable to set attributes on port " << portName <<
 				" : " << strerror_r(errno, buff, sizeof(buff)) <<
 				" (" << errno << ")" <<
 				std::endl;
 
 		if (errno == EACCES)
 		{
-			std::cerr << "Check read/write permissions on " << portName <<
+			debugNormal << "Check read/write permissions on " << portName <<
 					" (you may need to add 'dialout' group or similar to your user)" <<
 					std::endl ;
 		}
@@ -421,7 +348,7 @@ bool GadgetTTY::genericOpen(const std::string& portName)
 	if (mFd <0)
 	{
 		char buff[512] ;
-		std::cerr << "Error: could not open port " << portName <<
+		debugNormal << "Error: could not open port " << portName <<
 				" : " << strerror_r(errno, buff, sizeof(buff)) <<
 				" (" << errno << ")" <<
 				std::endl;
@@ -440,7 +367,7 @@ bool GadgetTTY::genericOpen(const std::string& portName)
 //-------------------------------------------------------------------------------------------------------------
 void GadgetTTY::threadRun()
 {
-std::cerr << "GadgetTTY::threadRun" << std::endl ;
+debugNormal << "GadgetTTY::threadRun" << std::endl ;
 
 	// TODO - loop back to reconnect if connection lost, device removed or turned off
 
@@ -456,7 +383,7 @@ std::cerr << "GadgetTTY::threadRun" << std::endl ;
 			return ;
 	}
 
-	std::cerr << "GadgetTTY::threadRun - device open" << std::endl ;
+	debugNormal << "GadgetTTY::threadRun - device open" << std::endl ;
 
 	// Run a select loop on the device to send/receive bytes
 	while (mRun)
@@ -485,14 +412,14 @@ std::cerr << "GadgetTTY::threadRun" << std::endl ;
 		int rc = ::select(nfds, &rd_fds, &wr_fds, &err_fds, &timeout) ;
 		if (rc < 0)
 		{
-			std::cerr << "select error errno=" << errno << std::endl ;
+			debugNormal << "select error errno=" << errno << std::endl ;
 			return ;
 		}
 
 		// Error
 		if (FD_ISSET(mFd, &err_fds))
 		{
-			std::cerr << "FD error errno=" << errno << std::endl ;
+			debugNormal << "FD error errno=" << errno << std::endl ;
 			return ;
 		}
 
@@ -500,12 +427,12 @@ std::cerr << "GadgetTTY::threadRun" << std::endl ;
 		if (FD_ISSET(mFd, &rd_fds))
 		{
 			char buff[BUFF_SIZE] ;
-			std::cerr << "Reading.. " << std::endl ;
+//			debugNormal << "Reading.. " << std::endl ;
 			int num = ::read(mFd, buff, sizeof(buff)) ;
-			std::cerr << "reading=" << num << std::endl ;
+//			debugNormal << "reading=" << num << std::endl ;
 			if (num <= 0)
 			{
-				std::cerr << "read failed errno=" << errno << std::endl ;
+				debugNormal << "read failed errno=" << errno << std::endl ;
 				return ;
 			}
 
@@ -522,12 +449,12 @@ std::cerr << "GadgetTTY::threadRun" << std::endl ;
 			if (mTxBuffer.empty())
 				continue ;
 
-			std::cerr << TimeUtils::timestamp() << " Writing.. " << std::endl ;
+//			debugNormal << TimeUtils::timestamp() << " Writing.. " << std::endl ;
 			int num = ::write(mFd, mTxBuffer.data(), mTxBuffer.size()) ;
-			std::cerr << "writing=" << num << std::endl ;
+//			debugNormal << "writing=" << num << std::endl ;
 			if (num <= 0)
 			{
-				std::cerr << "write failed errno=" << errno << std::endl ;
+				debugNormal << "write failed errno=" << errno << std::endl ;
 				return ;
 			}
 
@@ -536,6 +463,6 @@ std::cerr << "GadgetTTY::threadRun" << std::endl ;
 	}
 
 
-	std::cerr << "GadgetTTY::threadRun - END" << std::endl ;
+	debugNormal << "GadgetTTY::threadRun - END" << std::endl ;
 }
 

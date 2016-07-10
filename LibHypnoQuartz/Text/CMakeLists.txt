@@ -29,15 +29,19 @@ add_sources (SOURCES
 include (cppcheck)
 addCppcheck(Text)
 
-	# Load google test
-	include (gtest)
+# Load google test
+include (gtest)
 
-	include_directories(.)
-	set(gtest_src
-		gtest/FontChar_unittest.cpp
-		gtest/Font4x4_unittest.cpp
-	)
-	addGtest(Text_GTEST "" ${gtest_src})
+include_directories(.)
+set(gtest_src
+	gtest/FontChar_unittest.cpp
+	gtest/Font4x4_unittest.cpp
+)
+addGtest(Text_GTEST "" ${gtest_src})
 
+## Valgrind
+include (valgrind)
+addMemcheck(Text_GTEST)
+addProfile(Text_GTEST)
 
 

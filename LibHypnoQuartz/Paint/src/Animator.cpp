@@ -43,6 +43,7 @@ using namespace HypnoQuartz ;
 
 //-------------------------------------------------------------------------------------------------------------
 Animator::Animator() :
+	Debuggable("Animator"),
 	mRateMs(30),
 	mNewFrame(),
 	mGetData(),
@@ -52,24 +53,24 @@ Animator::Animator() :
 	mAnimate(false),
 	mThread()
 {
-	std::cerr << "Animator NEW" << std::endl ;
+	debugVerbose << "Animator NEW" << std::endl ;
 	mThread = std::thread(&Animator::threadRun, this) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 Animator::~Animator()
 {
-	std::cerr << "Animator DEL" << std::endl ;
+	debugVerbose << "Animator DEL" << std::endl ;
 	mRun = false ;
 	stop() ;
 	mThread.join() ;
-	std::cerr << "Animator DEL - done" << std::endl ;
+	debugVerbose << "Animator DEL - done" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 void Animator::setFrameRate(unsigned rateMs)
 {
-	std::cerr << "Animator::setFrameRate" << std::endl ;
+	debugVerbose << "Animator::setFrameRate" << std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mRateMs = rateMs ;
 }
@@ -78,7 +79,7 @@ void Animator::setFrameRate(unsigned rateMs)
 bool Animator::start(NewFrameCallback newFrame,
 		GetDataCallback getData, PaintCallback paint)
 {
-	std::cerr << "Animator::start(callbacks)" << std::endl ;
+	debugVerbose << "Animator::start(callbacks)" << std::endl ;
 	stop() ;
 
 	// Set callbacks
@@ -106,7 +107,7 @@ bool Animator::start(std::shared_ptr<IAnimatorCallback> callbackObj)
 //-------------------------------------------------------------------------------------------------------------
 bool Animator::start()
 {
-	std::cerr << "Animator::start" << std::endl ;
+	debugVerbose << "Animator::start" << std::endl ;
 	// Check callbacks first
 	{
 		std::unique_lock<std::mutex> lock(mMutex) ;
@@ -124,18 +125,18 @@ bool Animator::start()
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mAnimate = true ;
 
-	std::cerr << "Animator::start - done" << std::endl ;
+	debugVerbose << "Animator::start - done" << std::endl ;
 	return true ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 void Animator::stop()
 {
-//	std::cerr << "Animator::stop" << std::endl ;
+//	debugVerbose << "Animator::stop" << std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	if (!mAnimate)
 	{
-//		std::cerr << "Animator::stop - already stopped" << std::endl ;
+//		debugVerbose << "Animator::stop - already stopped" << std::endl ;
 		return ;
 	}
 
@@ -145,7 +146,7 @@ void Animator::stop()
 	// Now we need to wait until gadget stopped
 	mCondTick.wait(lock, [this]()->bool {return !mAnimate;} ) ;
 
-//	std::cerr << "Animator::stop - now stopped : animate=" << mAnimate << std::endl ;
+//	debugVerbose << "Animator::stop - now stopped : animate=" << mAnimate << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -162,7 +163,7 @@ bool Animator::isRunning() const
 //-------------------------------------------------------------------------------------------------------------
 void Animator::threadRun()
 {
-	std::cerr << "Animator::threadRun - START" << std::endl ;
+	debugVerbose << "Animator::threadRun - START" << std::endl ;
 	std::chrono::system_clock::time_point untilTime(std::chrono::system_clock::now() + std::chrono::milliseconds(mRateMs)) ;
 
 	while (mRun)
@@ -175,7 +176,7 @@ void Animator::threadRun()
 				// Event
 				if (!mRun)
 				{
-					std::cerr << "Animator::threadRun - EXIT" << std::endl ;
+					debugVerbose << "Animator::threadRun - EXIT" << std::endl ;
 					return ;
 				}
 			}
@@ -202,7 +203,7 @@ void Animator::threadRun()
 			continue ;
 
 
-//		std::cerr << TimeUtils::timestamp() << " Animator::threadRun - animate" << std::endl ;
+//		debugVerbose << TimeUtils::timestamp() << " Animator::threadRun - animate" << std::endl ;
 
 		// Calculate next frame
 		animate = mNewFrame() ;
@@ -224,6 +225,6 @@ void Animator::threadRun()
 		}
 	}
 
-	std::cerr << "Animator::threadRun - END" << std::endl ;
+	debugVerbose << "Animator::threadRun - END" << std::endl ;
 }
 

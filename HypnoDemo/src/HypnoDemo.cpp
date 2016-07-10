@@ -69,8 +69,10 @@ void RunDemo(const std::string & port, const std::string & device)
 	anim.start(animCallback) ;
 
 	std::cout << "Hit enter to quit....\n";
-	std::string entry ;
-	std::cin >> entry ;
+	int cc = getchar() ;
+	(void)cc;
+	std::cout << "Stopping....\n";
+
 
 	anim.stop() ;
 
@@ -116,7 +118,6 @@ int main(int argc, char ** argv)
 		ShowUsage(argv[0]);
 		exit(-2);
 	}
-
 
 	// finally - run the demo!
 	try {

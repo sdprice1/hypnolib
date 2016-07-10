@@ -31,16 +31,20 @@ add_sources (SOURCES
 include (cppcheck)
 addCppcheck(Model)
 
-	# Load google test
-	include (gtest)
+# Load google test
+include (gtest)
 
-	include_directories(.)
-	set(gtest_src
-		gtest/Coord_unittest.cpp
-		gtest/CubeCoordMap_unittest.cpp
-		gtest/Colour_unittest.cpp
-	)
-	addGtest(Model_GTEST "" ${gtest_src})
+include_directories(.)
+set(gtest_src
+	gtest/Coord_unittest.cpp
+	gtest/CubeCoordMap_unittest.cpp
+	gtest/Colour_unittest.cpp
+)
+addGtest(Model_GTEST "" ${gtest_src})
 
+## Valgrind
+include (valgrind)
+addMemcheck(Model_GTEST)
+addProfile(Model_GTEST)
 
 
