@@ -32,7 +32,7 @@ endif
 # V=0 is quiet
 # V=1 show commands prefixed by $(Q), keep $(QQ) commands silent
 # V=2 show all commands
-CMAKE_DEBUG :=
+CMAKE_OPTS :=
 MAKE_DEBUG :=
 ifeq (0,$(BUILD_VERBOSITY))
     Q := @
@@ -43,11 +43,72 @@ else
 	    Q := 
 	    QQ := @
 	else
-		CMAKE_DEBUG := -DDEBUG_CMAKELIST=1
+		CMAKE_OPTS := -DDEBUG_CMAKELIST=1
 	    Q :=
 	    QQ :=
 	endif
 endif
+
+TEST_TTY ?= 0
+ifeq (1,$(TEST_TTY))
+	CMAKE_OPTS := $(CMAKE_OPTS) -DTEST_TTY=1
+endif
+
+ifneq (,$(COMPILER))
+	CMAKE_OPTS := $(CMAKE_OPTS) -DCMAKE_CXX_COMPILER=$(COMPILER)
+endif
+
+
+##############################################################################################
+# FUNCTIONS
+##############################################################################################
+
+# ADD_LIB_TARGETS - Parameterized "function" that adds the targets for creating the library
+#
+#	${1} = Library name
+#
+# Creates targets:
+#   ${1}-lib: Make lib
+#   ${1}-programs: Make library test programs
+#   ${1}-test: Run library tests
+#   ${1}-cppcheck: Run cppcheck on library source
+#   ${1}-memcheck: Run valgrind on library tests
+#
+#   USE WITH EVAL
+#
+define ADD_LIB_TARGETS
+${1}-lib: ${1}/build/Makefile
+	$$(Q)cd ${1}/build && $$(MAKE) lib --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-lib
+
+${1}-programs: ${1}-lib
+	$$(Q)cd ${1}/build && $$(MAKE) all --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-programs
+
+${1}-test: ${1}-programs
+	$$(Q)cd ${1}/build && $$(MAKE) test --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-test
+
+${1}-cppcheck: ${1}-lib
+	$$(Q)cd ${1}/build && $$(MAKE) cppcheck --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-cppcheck
+
+${1}-memcheck: ${1}-programs
+	$$(Q)cd ${1}/build && $$(MAKE) memcheck --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-memcheck
+
+${1}/build/Makefile : | ${1}/build
+	$$(Q)cd $$(dir $$(@)) && rm -rf *
+	$$(Q)cd $$(dir $$(@)) && cmake $$(CMAKE_OPTS) -DTOPDIR=$$(topdir) ..
+
+${1}/build:
+	$$(Q)mkdir -p $$(@)
+
+clean-${1}: 
+	$$(Q)rm -rf ${1}/build
+	$$(Q)echo cleaned ${1}
+.PHONY: clean-${1}
+endef
 
 
 ##############################################################################################
@@ -63,6 +124,10 @@ test tests: LibHypno-test LibHypnoQuartz-test
 cppcheck: LibHypno-cppcheck LibHypnoQuartz-cppcheck
 .PHONY: cppcheck
 
+#memcheck: LibHypno-memcheck LibHypnoQuartz-memcheck
+memcheck: LibHypnoQuartz-memcheck
+.PHONY: memcheck
+
 topdir := $(shell pwd)
 $(info topdir=$(topdir))
 
@@ -77,7 +142,7 @@ programs: build/Makefile
 
 build/Makefile : | build
 	$(Q)cd $(dir $@) && rm -rf *
-	$(Q)cd $(dir $@) && cmake $(CMAKE_DEBUG) -DTOPDIR=$(topdir) ..
+	$(Q)cd $(dir $@) && cmake $(CMAKE_OPTS) -DTOPDIR=$(topdir) ..
 
 build:
 	$(Q)mkdir -p $@
@@ -95,65 +160,11 @@ prog-cppcheck: build/Makefile
 LibHypno: LibHypno-lib LibHypno-programs
 .PHONY: LibHypno
 
-LibHypno_BUILD_DIR := LibHypno/build
-LibHypno-lib: $(LibHypno_BUILD_DIR)/Makefile
-	$(Q)cd $(LibHypno_BUILD_DIR) && $(MAKE) lib --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypno-lib
-
-LibHypno-programs: LibHypno-lib
-	$(Q)cd $(LibHypno_BUILD_DIR) && $(MAKE) all --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypno-programs
-
-LibHypno-test: LibHypno-programs
-	$(Q)cd $(LibHypno_BUILD_DIR) && $(MAKE) test --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypno-test
-
-LibHypno-cppcheck: LibHypno-lib
-	$(Q)cd $(LibHypno_BUILD_DIR) && $(MAKE) cppcheck --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypno-cppcheck
-
-$(LibHypno_BUILD_DIR)/Makefile : | $(LibHypno_BUILD_DIR)
-	$(Q)cd $(dir $@) && rm -rf *
-	$(Q)cd $(dir $@) && cmake $(CMAKE_DEBUG) -DTOPDIR=$(topdir) ..
-
-$(LibHypno_BUILD_DIR):
-	$(Q)mkdir -p $@
-
-clean-LibHypno: 
-	$(Q)rm -rf $(LibHypno_BUILD_DIR)
-	$(Q)echo cleaned LibHypno
-.PHONY: clean-LibHypno
+$(eval $(call ADD_LIB_TARGETS,LibHypno))
 
 ##-----------------------------------------------------------------------------	
 LibHypnoQuartz: LibHypno LibHypnoQuartz-lib LibHypnoQuartz-programs
 .PHONY: LibHypnoQuartz
 
-LibHypnoQuartz_BUILD_DIR := LibHypnoQuartz/build
-LibHypnoQuartz-lib: $(LibHypnoQuartz_BUILD_DIR)/Makefile
-	$(Q)cd $(LibHypnoQuartz_BUILD_DIR) && $(MAKE) lib --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypnoQuartz-lib
-
-LibHypnoQuartz-programs: LibHypnoQuartz-lib
-	$(Q)cd $(LibHypnoQuartz_BUILD_DIR) && $(MAKE) all --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypnoQuartz-programs
-
-LibHypnoQuartz-test: LibHypnoQuartz-programs
-	$(Q)cd $(LibHypnoQuartz_BUILD_DIR) && $(MAKE) test --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypnoQuartz-test
-
-LibHypnoQuartz-cppcheck: LibHypnoQuartz-programs
-	$(Q)cd $(LibHypnoQuartz_BUILD_DIR) && $(MAKE) cppcheck --no-print-directory $(MAKE_DEBUG)
-.PHONY: LibHypnoQuartz-cppcheck
-
-$(LibHypnoQuartz_BUILD_DIR)/Makefile : | $(LibHypnoQuartz_BUILD_DIR)
-	$(Q)cd $(dir $@) && rm -rf *
-	$(Q)cd $(dir $@) && cmake $(CMAKE_DEBUG) -DTOPDIR=$(topdir) ..
-
-$(LibHypnoQuartz_BUILD_DIR):
-	$(Q)mkdir -p $@
-
-clean-LibHypnoQuartz: 
-	$(Q)rm -rf $(LibHypnoQuartz_BUILD_DIR)
-	$(Q)echo cleaned LibHypnoQuartz
-.PHONY: clean-LibHypnoQuartz
+$(eval $(call ADD_LIB_TARGETS,LibHypnoQuartz))
 
