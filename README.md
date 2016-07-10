@@ -11,5 +11,6 @@ _This is an initial import of files to get the project going_
 
 ## Documentation
 
-[LibHypno](https://sdprice1.github.io/hypnolib/LibHypno/html/index.html) Hypnogadget original library (ported to Linux)
-[LibHypnoQuartz](https://sdprice1.github.io/hypnolib/LibHypnoQuartz/html/index.html) Extended library
+[LibHypno](https://sdprice1.github.io/hypnolib/LibHypno/html/index.html) - Hypnogadget original library (ported to Linux)
+
+[LibHypnoQuartz](https://sdprice1.github.io/hypnolib/LibHypnoQuartz/html/index.html) - Extended library
