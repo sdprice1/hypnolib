@@ -86,7 +86,7 @@ ${1}-programs: ${1}-lib
 .PHONY: ${1}-programs
 
 ${1}-test: ${1}-programs
-	$$(Q)cd ${1}/build && $$(MAKE) test --no-print-directory $$(MAKE_DEBUG)
+	$$(Q)cd ${1}/build && $$(MAKE) CTEST_OUTPUT_ON_FAILURE=1 test --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-test
 
 ${1}-cppcheck: ${1}-lib
