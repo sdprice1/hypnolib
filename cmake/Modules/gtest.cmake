@@ -27,7 +27,6 @@ endif ()
 set (_INCLUDED_GTEST 1)
 
 ##----------------------------------------------------------------------------------------------------------------------
-#find_package (GTest REQUIRED)
 find_package (GTest)
 #message("GTEST: ${GTEST_FOUND}")
 

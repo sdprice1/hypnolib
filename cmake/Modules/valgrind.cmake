@@ -14,10 +14,7 @@ set (_INCLUDED_VALGRIND 1)
 ##----------------------------------------------------------------------------------------------------------------------
 ## Find executable
 FIND_PROGRAM( VALGRIND_EXECUTABLE valgrind)
-message("VALGRIND=${VALGRIND_EXECUTABLE}")
-if (NOT VALGRIND_EXECUTABLE)
-	message (FATAL_ERROR "Unable to locate valgrind")
-endif()
+message("VALGRIND: Found=${VALGRIND_FOUND} prog=${VALGRIND_EXECUTABLE}")
 
 ##----------------------------------------------------------------------------------------------------------------------
 ## addMemcheck(<name>)
@@ -25,6 +22,8 @@ endif()
 ## Macro that adds a Valgrind memory leak test. $name is the executable name and will be used to create the coverage target
 ##
 macro (addMemcheck name)
+
+if (VALGRIND_FOUND)
 
     file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     set (executable ${name})
@@ -48,7 +47,7 @@ macro (addMemcheck name)
     endif()
 
 
-message("Adding ${name} for coverage, exe=${executable} (rel=${_relPath})...")
+message("Adding ${name} for memcheck, exe=${executable} (rel=${_relPath})...")
 
 	set (_targetname ${name}_memcheck)
 
@@ -71,6 +70,8 @@ message("Adding ${name} for coverage, exe=${executable} (rel=${_relPath})...")
 	add_targets( ${PROJECT_NAME}_memcheck ${_targetname} )
 
 message("Memcheck:  add ${_targetname} to ${PROJECT_NAME}_memcheck=${${PROJECT_NAME}_memcheck}")
+
+endif (VALGRIND_FOUND)
 
 endmacro (addMemcheck)
 
@@ -100,6 +101,8 @@ endfunction(addMemcheckTarget)
 ##
 macro (addProfile name)
 
+if (VALGRIND_FOUND)
+
     file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     set (executable ${name})
     set (srcDir "${CMAKE_SOURCE_DIR}/src")
@@ -122,7 +125,7 @@ macro (addProfile name)
     endif()
 
 
-message("Adding ${name} for coverage, exe=${executable} (rel=${_relPath})...")
+message("Adding ${name} for profiling, exe=${executable} (rel=${_relPath})...")
 
 	set (_targetname ${name}_profile)
 
@@ -142,6 +145,8 @@ message("Adding ${name} for coverage, exe=${executable} (rel=${_relPath})...")
 	add_targets( ${PROJECT_NAME}_profile ${_targetname} )
 
 message("Profile:  add ${_targetname} to ${PROJECT_NAME}_profile=${${PROJECT_NAME}_profile}")
+
+endif (VALGRIND_FOUND)
 
 endmacro (addProfile)
 
