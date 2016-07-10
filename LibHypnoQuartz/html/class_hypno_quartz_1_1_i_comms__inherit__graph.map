@@ -1,0 +1,5 @@
+<map id="HypnoQuartz::IComms" name="HypnoQuartz::IComms">
+<area shape="rect" id="node2" href="$class_hypno_quartz_1_1_comms.html" title="HypnoQuartz::Comms" alt="" coords="94,80,247,107"/>
+<area shape="rect" id="node3" href="$class_hypno_quartz_1_1_socket.html" title="HypnoQuartz::Socket" alt="" coords="5,155,152,181"/>
+<area shape="rect" id="node4" href="$class_hypno_quartz_1_1_tty_comms.html" title="HypnoQuartz::TtyComms" alt="" coords="177,155,348,181"/>
+</map>

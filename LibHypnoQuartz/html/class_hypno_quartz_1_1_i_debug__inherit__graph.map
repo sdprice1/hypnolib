@@ -1,0 +1,11 @@
+<map id="HypnoQuartz::IDebug" name="HypnoQuartz::IDebug">
+<area shape="rect" id="node2" href="$class_hypno_quartz_1_1_debuggable.html" title="HypnoQuartz::Debuggable" alt="" coords="203,81,379,108"/>
+<area shape="rect" id="node10" href="$class_hypno_quartz_1_1_debug_mgr.html" title="HypnoQuartz::DebugMgr" alt="" coords="207,132,374,159"/>
+<area shape="rect" id="node3" href="$class_hypno_quartz_1_1_animator.html" title="HypnoQuartz::Animator" alt="" coords="442,5,601,32"/>
+<area shape="rect" id="node4" href="$class_hypno_quartz_1_1_gadget_quartz.html" title="HypnoQuartz::GadgetQuartz" alt="" coords="427,56,615,83"/>
+<area shape="rect" id="node5" href="$class_hypno_quartz_1_1_gadget_t_t_y.html" title="HypnoQuartz::GadgetTTY" alt="" coords="434,107,609,133"/>
+<area shape="rect" id="node6" href="$class_hypno_quartz_1_1_thread.html" title="HypnoQuartz::Thread" alt="" coords="448,157,595,184"/>
+<area shape="rect" id="node7" href="$class_comms_server_1_1_comms_handler.html" title="HypnoQuartz::CommsServer\l::CommsHandler" alt="" coords="665,91,855,133"/>
+<area shape="rect" id="node8" href="$class_hypno_quartz_1_1_comms_client.html" title="HypnoQuartz::CommsClient" alt="" coords="667,157,853,184"/>
+<area shape="rect" id="node9" href="$class_hypno_quartz_1_1_comms_server.html" title="HypnoQuartz::CommsServer" alt="" coords="665,208,855,235"/>
+</map>
