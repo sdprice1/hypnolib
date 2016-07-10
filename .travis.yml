@@ -22,6 +22,8 @@ matrix:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libopencv-dev
+  - sudo apt-get install -y libgtest-dev
+  - sudo apt-get install -y cppcheck
 
 script:
   - make COMPILER=$COMPILER

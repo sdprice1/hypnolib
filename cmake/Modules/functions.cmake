@@ -159,13 +159,8 @@ message("addIncludes(${PROJECT_NAME}): CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_
 
 	foreach (_headerFile ${_HEADERS})
 
-	    # skip directories under build areas
-		string (FIND ${_headerFile} "/build/" pos)
-		if (${pos} EQUAL -1)
-    	    get_filename_component(_dir ${_headerFile} PATH)
-    	    
-            list (APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${_dir})
-	    endif()
+	    get_filename_component(_dir ${_headerFile} PATH)
+        list (APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${_dir})
 	        
    	endforeach()
 	
