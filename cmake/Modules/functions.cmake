@@ -110,9 +110,6 @@ endfunction(repoLibName)
 ##
 function (getCurrentLib lib)
 	
-#    file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
-#    repoLibName(libname ${PROJECT_NAME} ${_relPath})
- 
  	set (libname ${PROJECT_NAME})
     logDebug("getCurrentLib() PROJECT_NAME=${PROJECT_NAME} relpath=${_relPath} lib=${libname}")
 
@@ -227,9 +224,9 @@ endfunction(exportLib)
 ##
 macro (addLib var libName)
 
-message("addLib CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
-    set(paths "${CMAKE_SOURCE_DIR}/${libName}/build")
-    list(APPEND paths "${CMAKE_SOURCE_DIR}/../${libName}/build")
+message("addLib CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} BUILD_TYPE=${BUILD_TYPE}")
+    set(paths "${CMAKE_SOURCE_DIR}/${libName}/build/${BUILD_TYPE}")
+    list(APPEND paths "${CMAKE_SOURCE_DIR}/../${libName}/build/${BUILD_TYPE}")
     
 	# Find the package
 	find_package (${libName} PATHS ${paths} NO_DEFAULT_PATH)
@@ -443,4 +440,32 @@ macro (addOptDir dir)
 		add_subdirectory(${dir})
     endif()
 endmacro(addOptDir)
+
+
+##----------------------------------------------------------------------------------------------------------------------
+## addTests(<name> <libs> <sources>...)
+## 
+## Macro that adds all the back-end tests
+##
+macro (addTests name libs)
+
+	## Cppcheck
+	include (cppcheck)
+	addCppcheck(${name})
+
+	# Load google test
+	include (gtest)
+	addGtest(${name}_GTEST "${libs}" ${ARGN})
+
+	## Valgrind
+	include (valgrind)
+	addMemcheck(${name}_GTEST)
+	addProfile(${name}_GTEST)
+	
+	## Coverage
+	include (coverage)
+	addCoverage(${name}_GTEST)
+	
+	
+endmacro (addTests)
 

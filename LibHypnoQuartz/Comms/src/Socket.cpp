@@ -239,17 +239,13 @@ std::shared_ptr<IComms> Socket::accept() const
 {
 	int fd(getFd()) ;
 
-//std::cerr << "Socket::accept() fd=" << fd << std::endl ;
-
 	if (fd < 0)
 		return std::shared_ptr<IComms>() ;
 
     int client;
     socklen_t addrLen = mAddrSize ;
-    if ((client = ::accept(fd, mAddrPtr, &addrLen)) > 0)
+    if ((client = ::accept(fd, mAddrPtr, &addrLen)) >= 0)
         return std::shared_ptr<IComms>(new Socket(client)) ;
-
-//::perror("accept") ;
 
 	return std::shared_ptr<IComms>() ;
 }

@@ -22,22 +22,9 @@ add_sources (SOURCES
     src/AnimCallback.cpp
 )
 
-## Cppcheck
-include (cppcheck)
-addCppcheck(Paint)
-
-# Load google test
-include (gtest)
-
 include_directories(.)
 set(gtest_src
 	gtest/Animator_unittest.cpp
 )
-addGtest(Paint_GTEST "" ${gtest_src})
-
-## Valgrind
-include (valgrind)
-addMemcheck(Paint_GTEST)
-addProfile(Paint_GTEST)
-
+addTests(Paint "" ${gtest_src})
 

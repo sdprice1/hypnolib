@@ -43,7 +43,10 @@
 namespace HypnoQuartz {
 
 /*!
- * \class Path
+ * \brief Collection of path related utilities.
+ *
+ * Static methods which either operate on path strings (i.e. do not perform any file system access) or gather
+ * file/directory status by accessing the file system.
  */
 class Path {
 public:

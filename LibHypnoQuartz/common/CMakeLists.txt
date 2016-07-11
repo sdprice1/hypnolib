@@ -23,20 +23,15 @@ add_sources (SOURCES
     src/TimeUtils.cpp
 )
 
-## Cppcheck
-include (cppcheck)
-addCppcheck(common)
+include_directories(.)
+set(gtest_src
+	gtest/Path_unittest.cpp
+	gtest/Thread_unittest.cpp
+	gtest/test.cpp
+)
 
-	# Load google test
-	include (gtest)
+addTests(common "" ${gtest_src})
 
-	include_directories(.)
-	set(gtest_src
-		gtest/Path_unittest.cpp
-		gtest/Thread_unittest.cpp
-		gtest/test.cpp
-	)
-	addGtest(common_GTEST "" ${gtest_src})
 
 
 

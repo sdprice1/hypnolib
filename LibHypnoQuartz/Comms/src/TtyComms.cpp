@@ -52,6 +52,48 @@
 using namespace HypnoQuartz ;
 
 //=============================================================================================================
+// CLIENT
+//=============================================================================================================
+
+//-------------------------------------------------------------------------------------------------------------
+class ClientTtyComms : public TtyComms {
+public:
+	ClientTtyComms()
+	{
+		std::cerr << "ClientTtyComms NEW @ " << this << std::endl ;
+	}
+
+	virtual ~ClientTtyComms()
+	{
+		std::cerr << "ClientTtyComms DEL @ " << this << std::endl ;
+		close() ;
+	}
+
+	/**
+	 * Close the socket
+	 */
+	virtual void close() override
+	{
+		std::cerr << "ClientTtyComms::close() @ " << this << std::endl ;
+		setFd(-1) ;
+	}
+
+	// This client connection is in use when it's file descriptor is set
+	bool isInUse() const
+	{
+		return getFd() > 0 ;
+	}
+
+	void setInUse(int fd)
+	{
+		std::cerr << "TtyComms::setInUse(fd=" << fd << ") @ " << this << std::endl ;
+		setFd(fd) ;
+	}
+
+} ;
+
+
+//=============================================================================================================
 // PUBLIC
 //=============================================================================================================
 
@@ -59,22 +101,26 @@ using namespace HypnoQuartz ;
 TtyComms::TtyComms() :
 	Comms(),
 	mType(TtyType::NONE),
-    mRxBuff()
+    mRxBuff(),
+	mClient()
 {
+	std::cerr << "TtyComms NEW @ " << this << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 TtyComms::~TtyComms()
 {
+	std::cerr << "TtyComms DEL @ " << this << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 void TtyComms::close()
 {
-	// skip close if client copy
-	if (mType == TtyType::CLIENT_COPY)
-		return ;
+//	// skip close if client copy
+//	if (mType == TtyType::CLIENT_COPY)
+//		return ;
 
+	std::cerr << "TtyComms::close() @ " << this << std::endl ;
 	this->Comms::close() ;
 }
 
@@ -154,21 +200,36 @@ bool TtyComms::serverListen(const std::string& deviceName, unsigned maxConnectio
 //-------------------------------------------------------------------------------------------------------------
 std::shared_ptr<IComms> TtyComms::accept() const
 {
-	// Just return a copy of this fd
-	return std::shared_ptr<IComms>( new TtyComms(getFd()) ) ;
+	// Need to create client first time round
+	if (!mClient)
+		mClient = std::make_shared<ClientTtyComms>() ;
+
+	std::shared_ptr<ClientTtyComms> client(std::dynamic_pointer_cast<ClientTtyComms>(mClient)) ;
+
+	std::cerr << "TtyComms::accept() @ " << this << std::endl ;
+
+	// There can only ever be 1 accepted client
+	if (client->isInUse())
+		return std::shared_ptr<IComms>() ;
+
+	std::cerr << "TtyComms::accept() - accepted " << std::endl ;
+
+	// return a copy of this fd
+	client->setInUse(getFd()) ;
+	return mClient ;
 }
 
-//=============================================================================================================
-// PROTECTED
-//=============================================================================================================
-
-//-------------------------------------------------------------------------------------------------------------
-TtyComms::TtyComms(int fd) :
-	Comms(),
-	mType(TtyType::CLIENT_COPY)
-{
-	setFd(fd) ;
-}
+////=============================================================================================================
+//// PROTECTED
+////=============================================================================================================
+//
+////-------------------------------------------------------------------------------------------------------------
+//TtyComms::TtyComms(int fd) :
+//	Comms(),
+//	mType(TtyType::CLIENT_COPY)
+//{
+//	setFd(fd) ;
+//}
 
 //=============================================================================================================
 // PRIVATE
@@ -319,6 +380,7 @@ bool TtyComms::ttyOpen(const std::string& device)
 					" (you may need to add 'dialout' group or similar to your user)" <<
 					std::endl ;
 		}
+		::close(fd) ;
 		return false ;
 	}
 

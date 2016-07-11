@@ -102,9 +102,24 @@ endmacro (getCachedEnvVar)
 ## Set up link flags
 set (LINK_FLAGS "")
 
+# coverage
+if (${BUILD_TYPE} STREQUAL "Coverage")
+	set (LINK_FLAGS "-pg --coverage ${LINK_FLAGS}")
+endif ()
+
+
 ##----------------------------------------------------------------------------------------------------------------------
 ## Set up compiler flags
-set (COMPILE_FLAGS "-O0 -g3")
+
+# Debug
+if (${BUILD_TYPE} STREQUAL "Debug")
+	set (COMPILE_FLAGS "${COMPILE_FLAGS} -O0 -g3")
+endif()
+
+# coverage
+if (${BUILD_TYPE} STREQUAL "Coverage")
+	set (COMPILE_FLAGS "-pg --coverage ${COMPILE_FLAGS}")
+endif ()
 
 if (TEST_TTY)
 	set (COMPILE_FLAGS "${COMPILE_FLAGS} -DTEST_TTY")

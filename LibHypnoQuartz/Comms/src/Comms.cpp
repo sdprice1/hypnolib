@@ -89,7 +89,7 @@ void Comms::setNonBlocking(bool nonBlocking)
 	{
 		opts = (opts & ~O_NONBLOCK);
 	}
-	::fcntl(mFd, F_SETFL, opts);
+	(void)::fcntl(mFd, F_SETFL, opts);
 
 	mNonBlocking = nonBlocking ;
 }

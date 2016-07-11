@@ -156,7 +156,7 @@ std::vector<uint8_t > Model::toPacked() const
 	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Need to work from the raw coords to internal coords
-	uint8_t  byte ;
+	uint8_t  byte(0) ;
 	for (unsigned index=0; index <= mMaxIndex; ++index)
 	{
 		unsigned pixelIndex(index) ;

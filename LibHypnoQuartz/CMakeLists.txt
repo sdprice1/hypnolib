@@ -48,6 +48,7 @@ add_library (${PROJECT_NAME} STATIC ${SOURCES})
 addCppcheckTarget()
 addMemcheckTarget()
 addProfileTarget()
+addCoverageTarget()
 
 ##----------------------------------------------------------------------------------------------------------------------
 exportLib()

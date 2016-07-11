@@ -22,23 +22,9 @@ add_sources (SOURCES
     src/DebugMgr.cpp
 )
 
-## Cppcheck
-include (cppcheck)
-addCppcheck(Debug)
-
-# Load google test
-include (gtest)
-
 include_directories(.)
 set(gtest_src
 	gtest/Debug_unittest.cpp
 )
-addGtest(Debug_GTEST "" ${gtest_src})
-
-## Valgrind
-include (valgrind)
-addMemcheck(Debug_GTEST)
-addProfile(Debug_GTEST)
-
-
+addTests(Debug "" ${gtest_src})
 

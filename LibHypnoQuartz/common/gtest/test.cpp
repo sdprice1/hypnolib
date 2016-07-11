@@ -33,7 +33,8 @@
 int main( int argc, char* argv[] )
 {
 	::testing::InitGoogleTest(&argc, argv);
-	chdir("common") ;
+	int rc = ::chdir("common") ;
+	(void)rc ;
 	return RUN_ALL_TESTS();
 }
 

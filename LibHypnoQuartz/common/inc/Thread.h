@@ -46,7 +46,7 @@ namespace HypnoQuartz {
  */
 class Thread : public Debuggable {
 public:
-	Thread(const std::string& name) ;
+	explicit Thread(const std::string& name) ;
 	virtual ~Thread() ;
 
 	/**

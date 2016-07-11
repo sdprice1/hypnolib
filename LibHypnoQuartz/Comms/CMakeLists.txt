@@ -25,13 +25,6 @@ add_sources (SOURCES
     src/CommsServer.cpp
 )
 
-## Cppcheck
-include (cppcheck)
-addCppcheck(Comms)
-
-# Load google test
-include (gtest)
-
 include_directories(.)
 set(gtest_src
 	gtest/Socket_unittest.cpp
@@ -42,13 +35,7 @@ set(gtest_src
 	gtest/TtyClientServer_unittest.cpp
 	gtest/test.cpp
 )
-addGtest(Comms_GTEST "" ${gtest_src})
-
-## Valgrind
-include (valgrind)
-addMemcheck(Comms_GTEST)
-addProfile(Comms_GTEST)
-
+addTests(Comms "" ${gtest_src})
 
 ## Echo server demo program
 set(demo_src

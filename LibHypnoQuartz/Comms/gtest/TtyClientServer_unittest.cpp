@@ -64,18 +64,28 @@ public:
 	// Implement echo
 	virtual bool handler(std::shared_ptr<IComms> comms)
 	{
-		comms->setNonBlocking(false) ;
+std::cerr << "<TEST> handler - START" << std::endl;
 
 		while (isConnected())
 		{
+			TimeUtils::msSleep(200) ;
+			if (!isConnected())
+				break ;
+
 			std::string rx ;
+			std::cerr << "<TEST> handler - Receive..." << std::endl;
 			if (!comms->receive(rx))
 				break ;
 
 			// echo back
-			comms->send(rx) ;
+			if (!rx.empty())
+			{
+				std::cerr << "<TEST> handler - Echo" << std::endl;
+				comms->send(rx) ;
+			}
 		}
 
+std::cerr << "<TEST> handler - END" << std::endl;
 		return false ;
 	}
 
@@ -98,12 +108,12 @@ TEST_F(TtyClientServerTest, Connect)
 	TtyServer server ;
 	EXPECT_TRUE(server.start(DEV0)) ;
 
-sleep(1) ;
-
-	// client
-	TtyClient client ;
-	std::cerr << "== CLIENT CONNECT ===" << std::endl ;
-	EXPECT_TRUE(client.start(DEV1)) ;
+//sleep(1) ;
+//
+//	// client
+//	TtyClient client ;
+//	std::cerr << "== CLIENT CONNECT ===" << std::endl ;
+//	EXPECT_TRUE(client.start(DEV1)) ;
 
 	std::cerr << "== TEST END ===" << std::endl ;
 }

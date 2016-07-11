@@ -17,12 +17,9 @@
  * along with Hypnocube.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \file      TtyComms.h
- * \brief     Comms class for serial tty
  *
  * \date      30 Jun 2016
  * \author    sdprice1
- *
- * \details   Socket-like interface for serial communications
  *
  */
 
@@ -40,7 +37,9 @@
 namespace HypnoQuartz {
 
 /*!
- * \class TtyComms
+ * Comms class for serial tty
+ *
+ * Socket-like interface for serial communications
  */
 class TtyComms : public Comms {
 public:
@@ -95,9 +94,9 @@ public:
 	 */
 	virtual std::shared_ptr<IComms> accept() const  override ;
 
-protected:
-	// Create a client object
-	explicit TtyComms(int fd) ;
+//protected:
+//	// Create a client object
+//	explicit TtyComms(int fd) ;
 
 private:
 	// tty open
@@ -114,10 +113,11 @@ private:
 		NONE,
 		SERVER,
 		CLIENT,
-		CLIENT_COPY
+//		CLIENT_COPY
 	};
 	TtyType mType ;
     std::vector <uint8_t> mRxBuff ;
+    mutable std::shared_ptr<IComms> mClient ;
 } ;
 
 }

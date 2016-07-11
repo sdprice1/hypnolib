@@ -28,6 +28,23 @@ ifneq ($(V),)
 BUILD_VERBOSITY := $(V)
 endif
 
+## Build type - default is Release
+BUILD_TYPE := Release
+ifeq ($(MAKECMDGOALS),debug)
+	BUILD_TYPE := Debug
+endif
+ifeq ($(MAKECMDGOALS),test)
+	BUILD_TYPE := Debug
+endif
+ifeq ($(MAKECMDGOALS),memcheck)
+	BUILD_TYPE := Debug
+endif
+
+ifeq ($(MAKECMDGOALS),coverage)
+	BUILD_TYPE := Coverage
+endif
+
+
 # Levels of verbosity
 # V=0 is quiet
 # V=1 show commands prefixed by $(Q), keep $(QQ) commands silent
@@ -54,10 +71,18 @@ ifeq (1,$(TEST_TTY))
 	CMAKE_OPTS := $(CMAKE_OPTS) -DTEST_TTY=1
 endif
 
+# Option specific for Travis CI - use the environment var to determine the compiler
 ifneq (,$(COMPILER))
 	CMAKE_OPTS := $(CMAKE_OPTS) -DCMAKE_CXX_COMPILER=$(COMPILER)
 endif
 
+# CMAKE build type
+CMAKE_OPTS := $(CMAKE_OPTS) -DBUILD_TYPE=$(BUILD_TYPE)
+ifeq (Release,$(BUILD_TYPE))
+	CMAKE_OPTS := $(CMAKE_OPTS) -DCMAKE_BUILD_TYPE=Release
+else
+	CMAKE_OPTS := $(CMAKE_OPTS) -DCMAKE_BUILD_TYPE=Debug
+endif
 
 ##############################################################################################
 # FUNCTIONS
@@ -77,31 +102,35 @@ endif
 #   USE WITH EVAL
 #
 define ADD_LIB_TARGETS
-${1}-lib: ${1}/build/Makefile
-	$$(Q)cd ${1}/build && $$(MAKE) lib --no-print-directory $$(MAKE_DEBUG)
+${1}-lib: ${1}/build/$(BUILD_TYPE)/Makefile
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) lib --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-lib
 
 ${1}-programs: ${1}-lib
-	$$(Q)cd ${1}/build && $$(MAKE) all --no-print-directory $$(MAKE_DEBUG)
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) all --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-programs
 
 ${1}-test: ${1}-programs
-	$$(Q)cd ${1}/build && $$(MAKE) CTEST_OUTPUT_ON_FAILURE=1 test --no-print-directory $$(MAKE_DEBUG)
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) CTEST_OUTPUT_ON_FAILURE=1 test --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-test
 
 ${1}-cppcheck: ${1}-lib
-	$$(Q)cd ${1}/build && $$(MAKE) cppcheck --no-print-directory $$(MAKE_DEBUG)
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) cppcheck --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-cppcheck
 
 ${1}-memcheck: ${1}-programs
-	$$(Q)cd ${1}/build && $$(MAKE) memcheck --no-print-directory $$(MAKE_DEBUG)
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) memcheck --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-memcheck
 
-${1}/build/Makefile : | ${1}/build
-	$$(Q)cd $$(dir $$(@)) && rm -rf *
-	$$(Q)cd $$(dir $$(@)) && cmake $$(CMAKE_OPTS) -DTOPDIR=$$(topdir) ..
+${1}-coverage: ${1}-programs
+	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) coverage --no-print-directory $$(MAKE_DEBUG)
+.PHONY: ${1}-coverage
 
-${1}/build:
+${1}/build/$(BUILD_TYPE)/Makefile : | ${1}/build/$(BUILD_TYPE)
+	$$(Q)cd $$(dir $$(@)) && rm -rf *
+	$$(Q)cd $$(dir $$(@)) && cmake $$(CMAKE_OPTS) -DTOPDIR=$$(topdir) ../..
+
+${1}/build/$(BUILD_TYPE):
 	$$(Q)mkdir -p $$(@)
 
 clean-${1}: 
@@ -115,8 +144,11 @@ endef
 # TARGETS
 ##############################################################################################
 
-all: LibHypno LibHypnoQuartz programs
-.PHONY: all
+all debug release: libs programs
+.PHONY: all debug release
+
+lib libs: LibHypno LibHypnoQuartz
+.PHONY: lib libs
 
 test tests: LibHypno-test LibHypnoQuartz-test
 .PHONY: test tests
@@ -124,9 +156,12 @@ test tests: LibHypno-test LibHypnoQuartz-test
 cppcheck: LibHypno-cppcheck LibHypnoQuartz-cppcheck
 .PHONY: cppcheck
 
-#memcheck: LibHypno-memcheck LibHypnoQuartz-memcheck
-memcheck: LibHypnoQuartz-memcheck
+#memcheck: libs LibHypno-memcheck LibHypnoQuartz-memcheck
+memcheck: libs LibHypnoQuartz-memcheck
 .PHONY: memcheck
+
+coverage: libs tests LibHypnoQuartz-coverage
+.PHONY: coverage
 
 topdir := $(shell pwd)
 $(info topdir=$(topdir))
@@ -136,15 +171,15 @@ clean: clean-programs clean-LibHypno clean-LibHypnoQuartz
 .PHONY: clean
 
 ##-----------------------------------------------------------------------------	
-programs: build/Makefile
+programs: build/$(BUILD_TYPE)/Makefile libs
 	$(Q)cd $(dir $<) && $(MAKE) --no-print-directory $(MAKE_DEBUG)
 .PHONY: programs
 
-build/Makefile : | build
+build/$(BUILD_TYPE)/Makefile : | build/$(BUILD_TYPE)
 	$(Q)cd $(dir $@) && rm -rf *
-	$(Q)cd $(dir $@) && cmake $(CMAKE_OPTS) -DTOPDIR=$(topdir) ..
+	$(Q)cd $(dir $@) && cmake $(CMAKE_OPTS) -DTOPDIR=$(topdir) ../..
 
-build:
+build/$(BUILD_TYPE):
 	$(Q)mkdir -p $@
 
 clean-programs:
@@ -152,7 +187,7 @@ clean-programs:
 	$(Q)echo cleaned programs
 .PHONY: clean-programs
 
-prog-cppcheck: build/Makefile
+prog-cppcheck: build/$(BUILD_TYPE)/Makefile
 	$(Q)cd $(dir $<) && $(MAKE) cppcheck --no-print-directory $(MAKE_DEBUG)
 .PHONY: prog-cppcheck
 

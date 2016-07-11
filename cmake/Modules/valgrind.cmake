@@ -14,6 +14,10 @@ set (_INCLUDED_VALGRIND 1)
 ##----------------------------------------------------------------------------------------------------------------------
 ## Find executable
 FIND_PROGRAM( VALGRIND_EXECUTABLE valgrind)
+set (VALGRIND_FOUND 1)
+if (${VALGRIND_EXECUTABLE} STREQUAL "VALGRIND_EXECUTABLE-NOTFOUND")
+	set (VALGRIND_FOUND 0)
+endif()
 message("VALGRIND: Found=${VALGRIND_FOUND} prog=${VALGRIND_EXECUTABLE}")
 
 ##----------------------------------------------------------------------------------------------------------------------
