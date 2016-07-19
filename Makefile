@@ -126,6 +126,12 @@ ${1}-coverage: ${1}-programs
 	$$(Q)cd ${1}/build/$(BUILD_TYPE) && $$(MAKE) coverage --no-print-directory $$(MAKE_DEBUG)
 .PHONY: ${1}-coverage
 
+${1}-doc: 
+	$$(Q)if [ -f ${1}/doc/Doxyfile ]; then \
+		cd ${1}/doc && doxygen; \
+	fi
+.PHONY: ${1}-doc
+
 ${1}/build/$(BUILD_TYPE)/Makefile : | ${1}/build/$(BUILD_TYPE)
 	$$(Q)cd $$(dir $$(@)) && rm -rf *
 	$$(Q)cd $$(dir $$(@)) && cmake $$(CMAKE_OPTS) -DTOPDIR=$$(topdir) ../..
@@ -147,26 +153,28 @@ endef
 all debug release: libs programs
 .PHONY: all debug release
 
-lib libs: LibHypno LibHypnoQuartz
+lib libs: Hypno 
 .PHONY: lib libs
 
-test tests: LibHypno-test LibHypnoQuartz-test
+test tests: Hypno-test 
 .PHONY: test tests
 
-cppcheck: LibHypno-cppcheck LibHypnoQuartz-cppcheck
+cppcheck: Hypno-cppcheck 
 .PHONY: cppcheck
 
-#memcheck: libs LibHypno-memcheck LibHypnoQuartz-memcheck
-memcheck: libs LibHypnoQuartz-memcheck
+memcheck: libs Hypno-memcheck
 .PHONY: memcheck
 
-coverage: libs tests LibHypnoQuartz-coverage
+coverage: libs tests Hypno-coverage
 .PHONY: coverage
+
+doc: Hypno-doc Hypno-doc
+.PHONY: doc
 
 topdir := $(shell pwd)
 $(info topdir=$(topdir))
 
-clean: clean-programs clean-LibHypno clean-LibHypnoQuartz
+clean: clean-programs clean-Hypno
 	$(Q)echo All cleaned
 .PHONY: clean
 
@@ -192,14 +200,8 @@ prog-cppcheck: build/$(BUILD_TYPE)/Makefile
 .PHONY: prog-cppcheck
 
 ##-----------------------------------------------------------------------------	
-LibHypno: LibHypno-lib LibHypno-programs
-.PHONY: LibHypno
+Hypno: Hypno-lib Hypno-programs
+.PHONY: Hypno
 
-$(eval $(call ADD_LIB_TARGETS,LibHypno))
-
-##-----------------------------------------------------------------------------	
-LibHypnoQuartz: LibHypno LibHypnoQuartz-lib LibHypnoQuartz-programs
-.PHONY: LibHypnoQuartz
-
-$(eval $(call ADD_LIB_TARGETS,LibHypnoQuartz))
+$(eval $(call ADD_LIB_TARGETS,Hypno))
 

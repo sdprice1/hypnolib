@@ -31,10 +31,9 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "Font4x4.h"
-#include "CubeModel.h"
-
 #include "TextAnim.h"
+#include "CubeModel.h"
+#include "Font4x4.h"
 
 using namespace HypnoQuartz ;
 

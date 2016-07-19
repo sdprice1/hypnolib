@@ -33,8 +33,7 @@ set (SOURCES
 )
 
 ## Uses hypno lib
-addLib(libs LibHypno)
-addLib(libs LibHypnoQuartz)
+addLib(libs Hypno)
 
 ## Executable
 addExecutable(${program} "${libs}" ${SOURCES})

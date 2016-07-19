@@ -31,6 +31,7 @@
 #define HYPNODEMO_INC_SQUAREANIM_H_
 
 #include <memory>
+
 #include "AnimCallback.h"
 
 namespace HypnoQuartz {

@@ -22,9 +22,10 @@
 #include <memory>
 #include <algorithm>
 
-#include "TextAnim.h"
-#include "Animator.h"
+#include "IDebug.h"
 #include "GadgetQuartz.h"
+#include "Animator.h"
+#include "TextAnim.h"
 
 using namespace HypnoGadget;
 using namespace HypnoQuartz;
@@ -93,6 +94,8 @@ int main(int argc, char ** argv)
 	// get parameters
 	std::string port(argv[1]);
 	std::string text(argv[2]);
+
+	IDebug::setDebug("GadgetQuartz", IDebug::VERBOSE) ;
 
 	// finally - run the demo!
 	try {

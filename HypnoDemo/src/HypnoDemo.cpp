@@ -22,10 +22,10 @@
 #include <memory>
 #include <algorithm>
 
+#include "GadgetQuartz.h"
 #include "Animator.h"
 #include "CubeAnim.h"
 #include "SquareAnim.h"
-#include "GadgetQuartz.h"
 
 using namespace HypnoGadget;
 using namespace HypnoQuartz;
