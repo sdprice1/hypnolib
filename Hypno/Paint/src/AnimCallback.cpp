@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "AnimCallback.h"
+#include "hypno/AnimCallback.h"
 
 using namespace HypnoQuartz ;
 

@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "Thread.h"
+#include "hypno/Thread.h"
 
 using namespace HypnoQuartz ;
 
@@ -46,6 +46,7 @@ Thread::Thread(const std::string& name) :
 	mRun(false),
 	mExit(false),
 	mRunning(false),
+	mThreadRunning(false),
 	mThread(),
 	mMutex()
 {
@@ -62,6 +63,8 @@ Thread::~Thread()
 
 	// cause the thread to exit
 	this->exit() ;
+
+	std::cerr << "Thread[" << mName <<"] DEL - join" << std::endl ;
 	mThread.join() ;
 
 	std::cerr << "Thread[" << mName <<"] DEL - End" << std::endl ;
@@ -115,6 +118,9 @@ bool Thread::stop()
 	while(mRunning)
 	{
 		TimeUtils::msSleep(1) ;
+
+		// Request a stop
+		stopRequest() ;
 	}
 
 	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
@@ -126,12 +132,14 @@ bool Thread::exit()
 {
 	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
 
-	// send request
-	exitRequest() ;
-
-	// wait for stop
-	while(mRunning)
+	// wait for thread exit
+	while(mThreadRunning)
 	{
+//		std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " exit request..." << std::endl ;
+
+		// send request
+		exitRequest() ;
+
 		TimeUtils::msSleep(1) ;
 	}
 
@@ -175,6 +183,8 @@ void Thread::exitRequest()
 //-------------------------------------------------------------------------------------------------------------
 void Thread::threadRun()
 {
+	mThreadRunning = true ;
+
 	std::cerr << "Thread[" << mName <<"] threadRun - START" << std::endl ;
 	while (!mExit)
 	{
@@ -183,12 +193,15 @@ void Thread::threadRun()
 			std::cerr << "Thread[" << mName <<"] threadRun - waiting..." << std::endl ;
 			std::unique_lock<std::mutex> lock(mMutex);
 			while (!mRun && !mExit)
+			{
 				mCond.wait(lock) ;
+				std::cerr << "Thread[" << mName <<"] threadRun - cond signal run=" << mRun << " exit=" << mExit << std::endl ;
+			}
 
 			std::cerr << "Thread[" << mName <<"] threadRun - run=" << mRun << " exit=" << mExit << std::endl ;
 
 			if (mExit)
-				return ;
+				break ;
 		}
 
 		mRunning = true ;
@@ -196,11 +209,16 @@ void Thread::threadRun()
 		while (mRun && !mExit)
 		{
 			if (!run())
+			{
+				mRun = false ;
 				break ;
+			}
 		}
 		mRunning = false ;
 		std::cerr << "Thread[" << mName <<"] threadRun - not running" << std::endl ;
 	}
+
+	mThreadRunning = false ;
 
 	std::cerr << "Thread[" << mName <<"] threadRun - END" << std::endl ;
 }

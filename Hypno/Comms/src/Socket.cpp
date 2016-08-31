@@ -30,7 +30,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "Socket.h"
+#include "hypno/Socket.h"
 
 #include <netdb.h>
 #include <unistd.h>
@@ -110,8 +110,7 @@ Socket::Socket() :
 	mAddrPtr(nullptr),
 	mAddrTcp(),
 	mAddrUnix(),
-	mUnixPath(),
-	mRxBuff()
+	mUnixPath()
 {
 	std::cerr << "Socket NEW @ " << this << std::endl ;
 }
@@ -125,10 +124,10 @@ Socket::~Socket()
 }
 
 //-------------------------------------------------------------------------------------------------------------
-void Socket::close()
+IFile::FileStatus Socket::close()
 {
 	std::cerr << "Socket::close() @ " << this << " fd=" << getFd() << std::endl ;
-	this->Comms::close() ;
+	IFile::FileStatus status = this->Comms::close() ;
 
 	if (!mUnixPath.empty())
 		::unlink(mUnixPath.c_str()) ;
@@ -139,54 +138,7 @@ void Socket::close()
     mUnixPath.clear() ;
 
 	std::cerr << "Socket::close() - END @ " << this << " fd=" << getFd() << std::endl ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::send(const std::string& s)
-{
-	return send(s.c_str(), s.size()) ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::send(const std::vector<uint8_t>& data)
-{
-	return send(&data[0], data.size()) ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::receive(std::string& s)
-{
-	unsigned numBytes ;
-	if (!receive(numBytes))
-		return false ;
-
-	if (isBinary())
-	{
-		// Use range constructor to ensure binary data (e.g. telnet control sequences) get copied across
-		// properly (otherwise 0 will terminate the string prematurely)
-		s = std::string(mRxBuff.begin(), mRxBuff.begin()+numBytes) ;
-	}
-	else
-	{
-		// text copy (to terminating NUL
-		auto rxBegin(mRxBuff.begin()) ;
-		auto rxEnd(mRxBuff.begin()+numBytes) ;
-		auto pos(std::find(rxBegin, rxEnd, 0)) ;
-
-		s = std::string(rxBegin, pos) ;
-	}
-	return true;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::receive(std::vector<uint8_t>& data)
-{
-	unsigned numBytes ;
-	if (!receive(numBytes))
-		return false ;
-
-	data.insert(data.end(), mRxBuff.begin(), mRxBuff.begin()+numBytes) ;
-	return true;
+	return status ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -210,7 +162,10 @@ bool Socket::clientConnect(const std::string& socketName)
 	if (!socketFactory(socketName))
 		return false ;
 
-	int fd(getFd()) ;
+	if (!isOpen())
+		return false ;
+
+	int fd(getFileDescriptor()) ;
     if (::connect(fd, mAddrPtr, mAddrSize) != -1)
     {
     	std::cerr << "Socket::clientConnect() @ " << this << " - connected fd=" << fd << std::endl ;
@@ -239,7 +194,10 @@ bool Socket::serverListen(const std::string& socketName, unsigned maxConnections
 	if (!socketFactory(socketName))
 		return false ;
 
-	int fd(getFd()) ;
+	if (!isOpen())
+		return false ;
+
+	int fd(getFileDescriptor()) ;
 
 	// For UNIX socket server needs to first remove the socket file
 	if (mType == SocketType::UNIX )
@@ -276,16 +234,18 @@ bool Socket::serverListen(const std::string& socketName, unsigned maxConnections
 //-------------------------------------------------------------------------------------------------------------
 std::shared_ptr<IComms> Socket::accept() const
 {
-	int fd(getFd()) ;
-
-	if (fd < 0)
+	if (!isOpen())
 		return std::shared_ptr<IComms>() ;
+
+	int fd(getFileDescriptor()) ;
 
     int client;
     socklen_t addrLen = mAddrSize ;
     if ((client = ::accept(fd, mAddrPtr, &addrLen)) >= 0)
         return std::shared_ptr<IComms>(new Socket(client)) ;
 
+
+::perror("accept") ;
 	return std::shared_ptr<IComms>() ;
 }
 
@@ -302,8 +262,7 @@ Socket::Socket(int fd) :
 	mAddrPtr(nullptr),
 	mAddrTcp(),
 	mAddrUnix(),
-	mUnixPath(),
-	mRxBuff()
+	mUnixPath()
 {
 	setFd(fd) ;
 }
@@ -472,64 +431,5 @@ bool Socket::createUnix(const std::string& path)
     mAddrSize = sizeof(struct sockaddr_un) ;
     mAddrPtr = reinterpret_cast<struct sockaddr*>(&mAddrUnix) ;
     return true ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::send(const void* data, unsigned size) const
-{
-	int fd(getFd()) ;
-	std::cerr << "Socket::send() @ " << this << " fd=" << fd << std::endl ;
-
-	// Send the data - if we get the EAGAIN error then retry a few times before failing
-	unsigned retryCount(SEND_RETRY_COUNT) ;
-	while (retryCount > 0)
-	{
-		if (::send(fd, data, size, MSG_NOSIGNAL) != -1)
-			return true;
-
-::perror("send") ;
-
-		if ( (errno != EAGAIN) && (errno != EWOULDBLOCK) )
-			return false ;
-
-		if (--retryCount == 0)
-			return false ;
-
-		// Pause
-	    struct timespec ts{0, 1000};
-	    nanosleep(&ts, (struct timespec *)0);
-	}
-
-	return false;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool Socket::receive(unsigned& numBytes)
-{
-	// Allocate a receive buffer dynamically when it's first needed
-    int maxRecBuf{8192};
-	if (mRxBuff.empty())
-	{
-		mRxBuff.reserve(maxRecBuf) ;
-		mRxBuff.resize(maxRecBuf, 0) ;
-	}
-
-	int fd(getFd()) ;
-    int status = ::recv(fd, &mRxBuff[0], maxRecBuf, 0);
-
-    if (status == -1)
-    {
-    	if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
-    		// non-blocking
-    		return true ;
-
-		return false;
-    }
-
-    if (status == 0)
-        return false;
-
-    numBytes = (unsigned)status ;
-	return true;
 }
 

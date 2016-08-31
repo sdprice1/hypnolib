@@ -30,12 +30,12 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "GadgetQuartz.h"
 
 #include <chrono>
 #include <iostream>
 
-#include "TimeUtils.h"
+#include "hypno/TimeUtils.h"
+#include "hypno/GadgetQuartz.h"
 
 using namespace HypnoGadget ;
 using namespace HypnoQuartz ;
@@ -309,7 +309,7 @@ void GadgetQuartz::threadRun()
 		if (!mRun)
 			break ;
 
-//debugVerbose << "GadgetQuartz::threadRun()" << std::endl ;
+debugVerbose << "GadgetQuartz::threadRun()" << std::endl ;
 
 		// Update gadget
 		mGadget->Update();

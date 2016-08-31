@@ -30,9 +30,11 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "CommsClient.h"
+#include "hypno/CommsException.h"
+#include "hypno/CommsClient.h"
 
 #include <iostream>
+#include <chrono>
 
 
 using namespace HypnoQuartz ;
@@ -54,7 +56,6 @@ CommsClient::CommsClient(std::shared_ptr<IComms> comms) :
 	mComms(comms),
 	mMutex(),
 	mCondRx(),
-	mBlocking(false),
 	mTxBuffer(),
 	mRxBuffer()
 {
@@ -66,12 +67,7 @@ CommsClient::~CommsClient()
 {
 	std::cerr << "CommsClient DEL @ " << this << " comms=" << mComms.get() << std::endl ;
 	this->Thread::exit() ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-void CommsClient::setBlocking(bool blocking)
-{
-	mBlocking = blocking ;
+	std::cerr << "CommsClient DEL - END @ " << this << " comms=" << mComms.get() << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -86,9 +82,6 @@ bool CommsClient::start(const std::string& connection)
 {
 	if (!mComms->clientConnect(connection))
 		return false ;
-
-	// ensure blocking
-	mComms->setNonBlocking(false) ;
 
 	// now create thread
 	this->Thread::start() ;
@@ -114,10 +107,10 @@ IDebug::dump("CommsClient::sendData ", data) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-bool CommsClient::receiveData(std::string& str)
+bool CommsClient::receiveData(std::string& str, unsigned timeoutMs)
 {
 	std::vector<uint8_t> data ;
-	if (!receiveData(data))
+	if (!receiveData(data, timeoutMs))
 		return false ;
 
 	str = std::string(data.begin(), data.end()) ;
@@ -125,21 +118,27 @@ bool CommsClient::receiveData(std::string& str)
 }
 
 //-------------------------------------------------------------------------------------------------------------
-bool CommsClient::receiveData(std::vector<uint8_t>& data)
+bool CommsClient::receiveData(std::vector<uint8_t>& data, unsigned timeoutMs)
 {
 	data.clear() ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
-	if (mBlocking)
+
+	if (timeoutMs > 0)
 	{
-		// blocking - wait for data
+		// wait for data or timeout
 		while (mRxBuffer.empty())
-			mCondRx.wait(lock) ;
+		{
+std::cerr << "CommsClient::receiveData waiting for data or timeout " << timeoutMs << std::endl ;
+			if (mCondRx.wait_for(lock, std::chrono::milliseconds(timeoutMs)) == std::cv_status::timeout)
+				return false ;
+std::cerr << "CommsClient::receiveData wait complete" << std::endl ;
+		}
 	}
 	else
 	{
-		// non-blocking - no data so return immediate
-		if (mRxBuffer.empty())
-			return true ;
+		// wait for data
+		while (mRxBuffer.empty())
+			mCondRx.wait(lock) ;
 	}
 
 	using std::swap ;
@@ -191,7 +190,14 @@ bool CommsClient::run()
 	if (selectSet.find(IComms::SelectMode::READ) != selectSet.end())
 	{
 		std::vector<uint8_t> rx ;
-		mComms->receive(rx) ;
+		try
+		{
+			mComms->receive(rx) ;
+		}
+		catch (CommsException& e)
+		{
+			return false ;
+		}
 
 		// buffer RX
 		if (!rx.empty())

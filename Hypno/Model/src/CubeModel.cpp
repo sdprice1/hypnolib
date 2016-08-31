@@ -31,9 +31,9 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "CubeModel.h"
+#include "hypno/CubeModel.h"
 
-#include "CubeCoordMap.h"
+#include "hypno/CubeCoordMap.h"
 
 using namespace HypnoQuartz ;
 

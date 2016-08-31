@@ -33,8 +33,8 @@
 #include "gtest/gtest.h"
 
 #include "test.h"
-#include "CommsClient.h"
-#include "TtyComms.h"
+#include "hypno/CommsClient.h"
+#include "hypno/Tty.h"
 
 using namespace HypnoQuartz ;
 
@@ -48,7 +48,7 @@ class TtyClient : public CommsClient
 {
 public:
 	TtyClient() :
-		CommsClient(std::shared_ptr<IComms>(new TtyComms))
+		CommsClient(std::shared_ptr<IComms>(new Tty))
 	{}
 
 	virtual ~TtyClient()
@@ -95,7 +95,7 @@ public:
 TEST_F(TtyClientTest, TtyConnect)
 {
 	// server
-	TtyComms tty0 ;
+	Tty tty0 ;
 	EXPECT_TRUE(tty0.serverListen(DEV0)) ;
 
 	// client
@@ -109,7 +109,7 @@ TEST_F(TtyClientTest, TtyConnect)
 TEST_F(TtyClientTest, TtyData)
 {
 	// server
-	TtyComms tty0 ;
+	Tty tty0 ;
 	EXPECT_TRUE(tty0.serverListen(DEV0)) ;
 
 	// client

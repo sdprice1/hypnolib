@@ -32,7 +32,7 @@
 
 #include <memory>
 
-#include "AnimCallback.h"
+#include "hypno/AnimCallback.h"
 
 namespace HypnoQuartz {
 

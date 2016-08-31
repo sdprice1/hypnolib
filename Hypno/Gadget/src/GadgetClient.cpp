@@ -27,7 +27,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "GadgetClient.h"
+#include "hypno/GadgetClient.h"
 
 #include <sys/time.h>
 #include <sys/select.h>
@@ -43,8 +43,8 @@
 #include <iomanip>
 #include <chrono>
 
-#include "Path.h"
-#include "TimeUtils.h"
+#include "hypno/Path.h"
+#include "hypno/TimeUtils.h"
 
 using namespace HypnoQuartz ;
 
@@ -108,11 +108,11 @@ bool GadgetClient::waitOpen(const std::string& portName)
 	// Wait here indefinitely until device becomes available
 	while (!mClient->start(portName))
 	{
-		debugNormal << " * waiting for " << portName << " ..." << std::endl ;
+		debugNormal << " * GadgetClient waiting for " << portName << " ..." << std::endl ;
 		sleep(1) ;
 	}
 
-	debugNormal << " * " << portName << " available, connected" << std::endl ;
+	debugNormal << " * GadgetClient " << portName << " available, connected" << std::endl ;
 
 	return true ;
 }
@@ -127,7 +127,8 @@ debugNormal << "GadgetClient::Close()" << std::endl ;
 debugNormal << "GadgetClient::Close() - DONE" << std::endl ;
 }
 
-bool HypnoQuartz::GadgetClient::isOpen() const
+//-------------------------------------------------------------------------------------------------------------
+bool GadgetClient::isOpen() const
 {
 	if (!mComms)
 		return false ;
@@ -145,7 +146,9 @@ bool HypnoQuartz::GadgetClient::isOpen() const
 uint16_t  GadgetClient::ReadBytes(uint8_t  * buffer, uint16_t  length)
 {
 	std::vector<uint8_t> data ;
-	if (!mClient->receiveData(data))
+
+	// Timeout after 100ms and keep going
+	if (!mClient->receiveData(data, 100))
 		return 0 ;
 
 	if (length > data.size())

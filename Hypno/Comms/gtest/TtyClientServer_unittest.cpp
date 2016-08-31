@@ -31,11 +31,10 @@
 // INCLUDE
 //=============================================================================================================
 #include "test.h"
-#include "Gtesting.h"
-#include "test.h"
-#include "CommsClient.h"
-#include "CommsServer.h"
-#include "TtyComms.h"
+#include "hypno/Gtesting.h"
+#include "hypno/CommsClient.h"
+#include "hypno/CommsServer.h"
+#include "hypno/Tty.h"
 
 using namespace HypnoQuartz ;
 
@@ -49,7 +48,7 @@ using namespace HypnoQuartz ;
 class TtyClient : public CommsClient
 {
 public:
-	TtyClient() : CommsClient(std::shared_ptr<IComms>(new TtyComms)) {}
+	TtyClient() : CommsClient(std::shared_ptr<IComms>(new Tty)) {}
 	virtual ~TtyClient() {}
 };
 
@@ -57,7 +56,7 @@ public:
 class TtyServer : public CommsServer
 {
 public:
-	TtyServer() : CommsServer(std::shared_ptr<IComms>(new TtyComms)) {}
+	TtyServer() : CommsServer(std::shared_ptr<IComms>(new Tty)) {}
 	virtual ~TtyServer() {}
 
 	// Implement echo
@@ -65,10 +64,10 @@ public:
 	{
 std::cerr << "<TEST> handler - START" << std::endl;
 
-		while (isConnected())
+		while (comms->isOpen())
 		{
 			TimeUtils::msSleep(200) ;
-			if (!isConnected())
+			if (!comms->isOpen())
 				break ;
 
 			std::string rx ;
@@ -108,12 +107,10 @@ TEST_F(TtyClientServerTest, Connect)
 	TtyServer server ;
 	EXPECT_TRUE(server.start(DEV0)) ;
 
-//sleep(1) ;
-//
-//	// client
-//	TtyClient client ;
-//	std::cerr << "== CLIENT CONNECT ===" << std::endl ;
-//	EXPECT_TRUE(client.start(DEV1)) ;
+	// client
+	TtyClient client ;
+	std::cerr << "== CLIENT CONNECT ===" << std::endl ;
+	EXPECT_TRUE(client.start(DEV1)) ;
 
 	std::cerr << "== TEST END ===" << std::endl ;
 }
@@ -127,7 +124,6 @@ TEST_F(TtyClientServerTest, Data)
 
 	// client
 	TtyClient client ;
-	client.setBlocking(true) ;
 	EXPECT_TRUE(client.start(DEV1)) ;
 
 	std::string message("Great, it works!") ;
@@ -147,6 +143,7 @@ TEST_F(TtyClientServerTest, Data)
 	std::cerr << "Received" << std::endl ;
 	EXPECT_EQ(message, rx) ;
 
+	std::cerr << "== TEST END ===" << std::endl ;
 }
 
 

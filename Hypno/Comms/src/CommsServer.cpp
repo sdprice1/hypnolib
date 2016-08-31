@@ -30,7 +30,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "CommsServer.h"
+#include "hypno/CommsServer.h"
 
 #include <functional>
 #include <algorithm>
@@ -57,17 +57,55 @@ public:
 		mHandler(handler),
 		mComms()
 	{
+		std::cerr << "CommsHandler[" << getName() << "] NEW" << std::endl ;
 	}
 
 	virtual ~CommsHandler()
 	{
+		std::cerr << "CommsHandler[" << getName() << "] DEL" << std::endl ;
+		if (mComms)
+			mComms->close() ;
 		this->Thread::exit() ;
+		std::cerr << "CommsHandler[" << getName() << "] DEL - END" << std::endl ;
 	}
 
-	virtual bool start(std::shared_ptr<IComms> comms)
+	virtual bool commsStart(std::shared_ptr<IComms> comms)
 	{
+		std::cerr << "CommsHandler[" << getName() << "] START" << std::endl ;
 		mComms = comms ;
 		this->Thread::start() ;
+		return true ;
+	}
+
+	virtual bool commsStop()
+	{
+		std::cerr << "CommsHandler[" << getName() << "] STOP" << std::endl ;
+		if (!mComms)
+			return true ;
+
+		// all done so close connection
+		mComms->close() ;
+
+		// stop this thread ready for next connection
+		stopRequest() ;
+
+		std::cerr << "CommsHandler[" << getName() << "] STOP - END" << std::endl ;
+		return true ;
+	}
+
+	virtual bool commsExit()
+	{
+		std::cerr << "CommsHandler[" << getName() << "] EXIT" << std::endl ;
+		if (!mComms)
+			return true ;
+
+		// all done so exit connection
+		mComms->exit() ;
+
+		// exit this thread
+		exitRequest() ;
+
+		std::cerr << "CommsHandler[" << getName() << "] EXIT - END" << std::endl ;
 		return true ;
 	}
 
@@ -79,14 +117,12 @@ public:
 protected:
 	virtual bool run() override
 	{
+		std::cerr << "CommsHandler[" << getName() << "] RUN" << std::endl ;
 		// run the handler
 		mHandler(mComms) ;
 
-		// all done so close connection
-		mComms->close() ;
-
-		// stop this thread ready for next connection
-		stopRequest() ;
+		commsStop() ;
+		std::cerr << "CommsHandler[" << getName() << "] RUN - END" << std::endl ;
 		return false ;
 	}
 
@@ -106,6 +142,7 @@ CommsServer::CommsServer(std::shared_ptr<IComms> comms, unsigned maxConnections)
 	mComms(comms),
 	mMaxConnections(maxConnections),
 	mConnected(false),
+	mExiting(false),
 	mMutex(),
 	mHandlers()
 {
@@ -114,7 +151,28 @@ CommsServer::CommsServer(std::shared_ptr<IComms> comms, unsigned maxConnections)
 //-------------------------------------------------------------------------------------------------------------
 CommsServer::~CommsServer()
 {
+	std::cerr << "CommsServer DEL - kill handlers..." << std::endl ;
+
+	mExiting = true ;
+
+	// Kill all of the handlers
+	for (auto handler : mHandlers)
+	{
+		handler->commsExit() ;
+	}
+
+	std::cerr << "CommsServer DEL - kill comms..." << std::endl ;
+
+	// stop comms
+	if (mComms)
+		mComms->close() ;
+
+	std::cerr << "CommsServer DEL - kill this thread..." << std::endl ;
+
+	// now kill this thread
 	this->Thread::exit() ;
+
+	std::cerr << "CommsServer DEL - END" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -136,8 +194,8 @@ bool CommsServer::start(const std::string& connection)
 		})) ;
 	}
 
-	// put comms into non-blocking mode
-	mComms->setNonBlocking(true) ;
+//	// put comms into non-blocking mode
+//	mComms->setNonBlocking(true) ;
 
 	// now start thread
 	this->Thread::start() ;
@@ -170,16 +228,19 @@ bool CommsServer::run()
 std::cerr << "CommsServer::run() - START" << std::endl ;
 
 	mConnected = true ;
-	while (mConnected && !isStop())
+	while (okToRun())
 	{
 		// Put sleep at start of loop so we can use "continue" in the if-guards to bring us back here and always perform a sleep
 		TimeUtils::msSleep(TICK_MS) ;
-		if (isStop())
+		if (!okToRun())
+		{
+			std::cerr << "CommsServer::run() - not ok to run" << std::endl ;
 			break ;
+		}
 
 		try
 		{
-//			std::cerr << "CommsServer::run() - wait for accept...." << std::endl ;
+			std::cerr << "CommsServer::run() - wait for accept...." << std::endl ;
 
 			// NOTE: Because I've used a smart pointer, if it doesn't get passed to a handler (and therefore copied) then
 			// it will go out of scope and automatically be closed
@@ -188,6 +249,11 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 				continue ;
 
 			std::cerr << "CommsServer::run() - accepted client @ " << client.get() << std::endl ;
+			if (!okToRun())
+			{
+				std::cerr << "CommsServer::run() - not ok to run" << std::endl ;
+				break ;
+			}
 
 			std::cerr << "-- Handlers ----" << std::endl ;
 			for (auto hndl : mHandlers)
@@ -207,7 +273,15 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 			std::cerr << "CommsServer::run() - start client @ " << client.get() << std::endl ;
 
 			// Pass client connection to this handler
-			(*handler)->start(client) ;
+			(*handler)->commsStart(client) ;
+
+			std::cerr << "-- Handlers now ----" << std::endl ;
+			for (auto hndl : mHandlers)
+			{
+				std::cerr << hndl->getName() << " : running=" << hndl->isRunning() << " stop=" << hndl->isStop() << std::endl ;
+			}
+			std::cerr << "----------------" << std::endl ;
+
 		}
 		catch (...)
 		{
@@ -217,6 +291,28 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 
 	std::cerr << "CommsServer::run() - END" << std::endl ;
 	mComms->close() ;
+
+	// If we're exiting then tell thread to exit
+	if (mExiting)
+		this->exitRequest() ;
+
 	return false ;
 }
 
+//-------------------------------------------------------------------------------------------------------------
+bool CommsServer::okToRun()
+{
+	if (mExiting)
+		return false ;
+
+	if (mComms->isExit())
+		return false ;
+
+	if (isStop())
+		return false ;
+
+	if (!mConnected)
+		return false ;
+
+	return true ;
+}

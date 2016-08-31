@@ -30,12 +30,12 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "Model.h"
+#include "hypno/Model.h"
 
 #include <algorithm>
 #include <iostream>
 
-#include "IDebug.h"
+#include "hypno/IDebug.h"
 
 using namespace HypnoQuartz ;
 

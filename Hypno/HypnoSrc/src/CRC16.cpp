@@ -2,10 +2,9 @@
 // Copyright Chris Lomont 2007-2008
 // www.HypnoCube.com, www.HypnoSquare.com
 // CRC16 checksum code
-#include "defines.h"
-#include "CRC16.h"
+#include "hypno/defines.h"
+#include "hypno/CRC16.h"
 
-#include "defines.h"
 
 namespace HypnoGadget {
 

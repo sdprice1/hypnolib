@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "FontChar.h"
+#include "hypno/FontChar.h"
 
 #include "gtest/gtest.h"
 

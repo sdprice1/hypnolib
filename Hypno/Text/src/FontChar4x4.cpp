@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "FontChar4x4.h"
+#include "hypno/FontChar4x4.h"
 
 using namespace HypnoQuartz ;
 

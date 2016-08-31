@@ -30,13 +30,15 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "IComms.h"
-#include "Gtesting.h"
 #include "test.h"
-#include "CommsClient.h"
-#include "CommsServer.h"
-#include "IComms.h"
-#include "Socket.h"
+
+#include "hypno/IComms.h"
+#include "hypno/Gtesting.h"
+#include "hypno/CommsClient.h"
+#include "hypno/CommsServer.h"
+#include "hypno/CommsException.h"
+#include "hypno/IComms.h"
+#include "hypno/Socket.h"
 
 using namespace HypnoQuartz ;
 
@@ -62,40 +64,41 @@ class FactoryServer : public CommsServer
 {
 public:
 	FactoryServer(const std::string& deviceName) :
-		CommsServer(IComms::factory(deviceName))
+		CommsServer(IComms::factory(deviceName)),
+		mStop(false),
+		mHandlerRunning(false)
 	{}
 	virtual ~FactoryServer() {}
 
 	// Implement echo
 	virtual bool handler(std::shared_ptr<IComms> comms)
 	{
-//		comms->setNonBlocking(false) ;
+		mHandlerRunning = true ;
 
-std::cerr << "<TEST> handler - START" << std::endl;
-
-		while (isConnected())
+		std::string rx ;
+		while (comms->isOpen())
 		{
-			TimeUtils::msSleep(200) ;
-			if (!isConnected())
+			try {
+				if (!comms->receive(rx))
+					break ;
+			} catch (CommsException& e) {
+				std::cerr << "Got exception " << e.what() << std::endl ;
 				break ;
-
-			std::string rx ;
-			std::cerr << "<TEST> handler - Receive..." << std::endl;
-			if (!comms->receive(rx))
-				break ;
+			}
 
 			// echo back
-			if (!rx.empty())
-			{
-				std::cerr << "<TEST> handler - Echo" << std::endl;
-				comms->send(rx) ;
-			}
+			std::cerr << "ECHO: '" << rx << "'" << std::endl ;
+			comms->send(rx) ;
 		}
 
-std::cerr << "<TEST> handler - END" << std::endl;
+		std::cerr << "<TEST> HANDLER STOPPED" << std::endl ;
+		mHandlerRunning = false ;
 		return false ;
 	}
 
+
+	bool mStop ;
+	bool mHandlerRunning ;
 };
 
 
@@ -110,7 +113,6 @@ public:
 
 		// client
 		FactoryClient client(clientName) ;
-		client.setBlocking(true) ;
 		EXPECT_TRUE(client.start(clientName)) ;
 
 		std::string message("Great, it works!") ;

@@ -28,7 +28,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "AsciiColour.h"
+#include "hypno/AsciiColour.h"
 
 using namespace HypnoQuartz ;
 

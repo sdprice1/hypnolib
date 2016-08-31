@@ -33,8 +33,8 @@
 #include <memory>
 #include <string>
 
-#include "Colour.h"
-#include "AnimCallback.h"
+#include "hypno/Colour.h"
+#include "hypno/AnimCallback.h"
 
 namespace HypnoQuartz {
 

@@ -2,7 +2,7 @@
 // Copyright Chris Lomont 2007-2008
 // www.HypnoCube.com, www.HypnoSquare.com
 // code to handle the gadget 
-#include "Gadget.h"
+#include "hypno/Gadget.h"
 
 #include <iostream>
 #include <string>
@@ -15,9 +15,9 @@
 #include <cassert>
 #include <deque>
 
-#include "Command.h"
-#include "Options.h"
-#include "Packet.h"
+#include "hypno/Command.h"
+#include "hypno/Options.h"
+#include "hypno/Packet.h"
 
 using namespace std;
 using namespace HypnoGadget;

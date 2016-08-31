@@ -30,7 +30,6 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "Comms.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -40,7 +39,10 @@
 #include <string.h>
 
 #include <iostream>
+#include <algorithm>
 
+#include "hypno/FileDescriptor.h"
+#include "hypno/Comms.h"
 
 using namespace HypnoQuartz ;
 
@@ -50,10 +52,10 @@ using namespace HypnoQuartz ;
 
 //-------------------------------------------------------------------------------------------------------------
 Comms::Comms() :
-	mFd(-1),
+	mFd(std::make_shared<FileDescriptor>()),
 	mBinary(false),
-	mNonBlocking(false),
-	mMaxConnections(IComms::DEFAULT_MAX_CONNECTIONS)
+	mMaxConnections(IComms::DEFAULT_MAX_CONNECTIONS),
+	mExiting(false)
 {
 }
 
@@ -61,39 +63,87 @@ Comms::Comms() :
 Comms::~Comms()
 {
 	std::cerr << "Comms DEL @ " << this << " fd=" << mFd << std::endl ;
+	this->exit() ;
+	std::cerr << "Comms DEL - END @ " << this << " fd=" << mFd << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-void Comms::close()
+void Comms::exit()
+{
+	mExiting = true ;
+	this->close() ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+bool Comms::isExit() const
+{
+	return mExiting ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+int Comms::getFileDescriptor() const
+{
+	return mFd->getFileDescriptor() ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+bool Comms::isOpen() const
+{
+	if (mExiting)
+		return false ;
+	return mFd->isOpen() ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+IFile::FileStatus Comms::close()
 {
 	std::cerr << "Comms::close() @ " << this << " fd=" << mFd << std::endl ;
-	if (mFd < 0)
-		return ;
+	return mFd->close() ;
+}
 
-	::close(mFd) ;
-	mFd = -1 ;
+
+//-------------------------------------------------------------------------------------------------------------
+IFile::FileStatus Comms::read(std::vector<uint8_t>& data, unsigned numBytes, unsigned & bytesRead)
+{
+	if (!isOpen())
+		return IFile::FileStatus::CLOSED ;
+
+	return mFd->read(data, numBytes, bytesRead) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-void Comms::setNonBlocking(bool nonBlocking)
+IFile::FileStatus Comms::read(std::vector<uint8_t>& data, unsigned numBytes, unsigned & bytesRead, unsigned timeoutMs)
 {
-    int opts = ::fcntl(mFd, F_GETFL);
+	if (!isOpen())
+		return IFile::FileStatus::CLOSED ;
 
-    if (opts <= 0)
-    	return ;
-
-	if (nonBlocking)
-	{
-		opts = (opts | O_NONBLOCK);
-	}
-	else
-	{
-		opts = (opts & ~O_NONBLOCK);
-	}
-	(void)::fcntl(mFd, F_SETFL, opts);
-
-	mNonBlocking = nonBlocking ;
+	return mFd->read(data, numBytes, bytesRead, timeoutMs) ;
 }
+
+//-------------------------------------------------------------------------------------------------------------
+IFile::FileStatus Comms::write(const std::vector<uint8_t>& data, unsigned & bytesWritten)
+{
+	if (!isOpen())
+		return IFile::FileStatus::CLOSED ;
+
+	return mFd->write(data, bytesWritten) ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+IFile::FileStatus Comms::write(const std::vector<uint8_t>& data, unsigned & bytesWritten, unsigned timeoutMs)
+{
+	if (!isOpen())
+		return IFile::FileStatus::CLOSED ;
+
+	return mFd->write(data, bytesWritten, timeoutMs) ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+void Comms::abort()
+{
+	mFd->abort() ;
+}
+
 
 //-------------------------------------------------------------------------------------------------------------
 void Comms::setBinary(bool binary)
@@ -104,81 +154,59 @@ void Comms::setBinary(bool binary)
 //-------------------------------------------------------------------------------------------------------------
 std::set<IComms::SelectMode> Comms::select(unsigned timeoutMs, bool read, bool write)
 {
-	int nfds = 0 ;
-	fd_set rd_fds, wr_fds, err_fds ;
-
-	nfds = mFd + 1 ;
-	FD_ZERO(&rd_fds) ;
-	FD_ZERO(&wr_fds) ;
-	FD_ZERO(&err_fds) ;
-
-	FD_SET(mFd, &err_fds) ;
-
-	if (read)
-		FD_SET(mFd, &rd_fds) ;
-	if (write)
-		FD_SET(mFd, &wr_fds) ;
-
-	// 100ms tick time
-	struct timeval timeout{ 0, timeoutMs } ;
-	struct timeval* timeoutPtr(nullptr) ;
-	if (timeoutMs)
-		timeoutPtr = &timeout ;
-	int rc = ::select(nfds, &rd_fds, &wr_fds, &err_fds, timeoutPtr) ;
-	if (rc < 0)
-	{
+	if (!isOpen())
 		return std::set<IComms::SelectMode>() ;
-	}
 
-	std::set<IComms::SelectMode> selectSet ;
-
-	// Error
-	if (FD_ISSET(mFd, &err_fds))
-	{
-		return std::set<IComms::SelectMode>({IComms::SelectMode::ERROR}) ;
-	}
-
-	// Read
-	if (FD_ISSET(mFd, &rd_fds))
-		selectSet.insert(IComms::SelectMode::READ) ;
-
-	// Write
-	if (FD_ISSET(mFd, &wr_fds))
-		selectSet.insert(IComms::SelectMode::WRITE) ;
-
-	// Timeout
-	if (selectSet.empty())
-		selectSet.insert(IComms::SelectMode::TIMEOUT) ;
-
-	return selectSet ;
+	return mFd->select(timeoutMs, read, write) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-bool Comms::send(const std::string& data)
+bool Comms::send(const std::string& s)
 {
-	// must override
-	return false ;
+	unsigned bytesWritten ;
+	return this->write(std::vector<uint8_t>(s.begin(), s.end()), bytesWritten) == IFile::FileStatus::OK ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 bool Comms::send(const std::vector<uint8_t>& data)
 {
-	// must override
-	return false ;
+	unsigned bytesWritten ;
+	return this->write(data, bytesWritten) == IFile::FileStatus::OK ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-bool Comms::receive(std::string& data)
+bool Comms::receive(std::string& s)
 {
-	// must override
-	return false ;
+	std::vector<uint8_t> rxBuff ;
+	unsigned numBytes ;
+	if (!_receive(numBytes, rxBuff))
+		return false ;
+
+	if (isBinary())
+	{
+		// Use range constructor to ensure binary data (e.g. telnet control sequences) get copied across
+		// properly (otherwise 0 will terminate the string prematurely)
+		s = std::string(rxBuff.begin(), rxBuff.begin()+numBytes) ;
+	}
+	else
+	{
+		// text copy (to terminating NUL)
+		auto pos(std::find(rxBuff.begin(), rxBuff.begin()+numBytes, (uint8_t)0)) ;
+		s = std::string(rxBuff.begin(), pos) ;
+	}
+	return true;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 bool Comms::receive(std::vector<uint8_t>& data)
 {
-	// must override
-	return false ;
+	std::vector<uint8_t> rxBuff ;
+	unsigned numBytes ;
+	if (!_receive(numBytes, rxBuff))
+		return false ;
+
+	data.insert(data.end(), rxBuff.begin(), rxBuff.begin()+numBytes) ;
+	return true;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -213,25 +241,19 @@ unsigned Comms::getMaxConnections() const
 //=============================================================================================================
 
 //-------------------------------------------------------------------------------------------------------------
-void HypnoQuartz::Comms::setFd(int fd)
+void Comms::setFd(int fd)
 {
-	mFd = fd ;
+	mFd->setFd(fd) ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-int Comms::getFd() const
+std::shared_ptr<IFile> Comms::getFd() const
 {
 	return mFd ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
-bool HypnoQuartz::Comms::isNonBlocking() const
-{
-	return mNonBlocking ;
-}
-
-//-------------------------------------------------------------------------------------------------------------
-bool HypnoQuartz::Comms::isBinary() const
+bool Comms::isBinary() const
 {
 	return mBinary ;
 }
@@ -240,5 +262,21 @@ bool HypnoQuartz::Comms::isBinary() const
 void Comms::setMaxConnections(unsigned maxConnections)
 {
 	mMaxConnections = maxConnections ;
+}
+
+//-------------------------------------------------------------------------------------------------------------
+bool Comms::_receive(unsigned& numBytes, std::vector<uint8_t>& rxBuff)
+{
+	numBytes = 0 ;
+
+	if (!isOpen())
+		return false ;
+
+    int maxRecBuf{8192};
+	rxBuff.clear() ;
+	if (this->read( rxBuff, maxRecBuf, numBytes) != IFile::FileStatus::OK)
+		return false ;
+
+	return true;
 }
 

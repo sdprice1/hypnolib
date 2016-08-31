@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "CoordMap.h"
+#include "hypno/CoordMap.h"
 
 using namespace HypnoQuartz ;
 

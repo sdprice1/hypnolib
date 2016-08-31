@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "Debuggable.h"
+#include "hypno/Debuggable.h"
 
 using namespace HypnoQuartz ;
 

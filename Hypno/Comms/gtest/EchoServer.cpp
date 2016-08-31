@@ -32,9 +32,10 @@
 //=============================================================================================================
 #include <unistd.h>
 
-#include "CommsClient.h"
-#include "CommsServer.h"
-#include "Socket.h"
+#include "hypno/CommsException.h"
+#include "hypno/CommsClient.h"
+#include "hypno/CommsServer.h"
+#include "hypno/Socket.h"
 
 using namespace HypnoQuartz ;
 
@@ -54,13 +55,17 @@ public:
 	// Implement echo
 	virtual bool handler(std::shared_ptr<IComms> comms)
 	{
-		comms->setNonBlocking(false) ;
-
 		while (isConnected())
 		{
 			std::string rx ;
-			if (!comms->receive(rx))
+
+			try {
+				if (!comms->receive(rx))
+					break ;
+			} catch (CommsException& e) {
+				std::cerr << "Got exception " << e.what() << std::endl ;
 				break ;
+			}
 
 			// echo back
 			comms->send(rx) ;

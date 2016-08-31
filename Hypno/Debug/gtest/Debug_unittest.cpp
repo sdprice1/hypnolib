@@ -32,7 +32,7 @@
 //=============================================================================================================
 #include "gtest/gtest.h"
 
-#include "Debuggable.h"
+#include "hypno/Debuggable.h"
 
 using namespace HypnoQuartz ;
 

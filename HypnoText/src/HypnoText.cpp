@@ -22,9 +22,9 @@
 #include <memory>
 #include <algorithm>
 
-#include "IDebug.h"
-#include "GadgetQuartz.h"
-#include "Animator.h"
+#include "hypno/IDebug.h"
+#include "hypno/GadgetQuartz.h"
+#include "hypno/Animator.h"
 #include "TextAnim.h"
 
 using namespace HypnoGadget;
@@ -95,6 +95,9 @@ int main(int argc, char ** argv)
 	std::string port(argv[1]);
 	std::string text(argv[2]);
 
+	IDebug::optionsName(true) ;
+	IDebug::optionsTimestamp(true) ;
+	IDebug::setDebug("GadgetClient", IDebug::VERBOSE) ;
 	IDebug::setDebug("GadgetQuartz", IDebug::VERBOSE) ;
 
 	// finally - run the demo!

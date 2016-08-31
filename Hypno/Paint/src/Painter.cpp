@@ -28,7 +28,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "Painter.h"
+#include "hypno/Painter.h"
 
 using namespace HypnoQuartz ;
 

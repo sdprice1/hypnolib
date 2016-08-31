@@ -31,8 +31,8 @@
 // INCLUDE
 //=============================================================================================================
 #include "test.h"
-#include "Gtesting.h"
-#include "TtyComms.h"
+#include "hypno/Gtesting.h"
+#include "hypno/Tty.h"
 
 using namespace HypnoQuartz ;
 
@@ -53,8 +53,8 @@ class TtyTest : public Gtesting {};
 //-------------------------------------------------------------------------------------------------------------------
 TEST_F(TtyTest, Connect)
 {
-	TtyComms tty0 ;
-	TtyComms tty1 ;
+	Tty tty0 ;
+	Tty tty1 ;
 
 	// server
 	EXPECT_TRUE(tty0.serverListen(DEV0)) ;
@@ -69,8 +69,8 @@ TEST_F(TtyTest, Connect)
 //-------------------------------------------------------------------------------------------------------------------
 TEST_F(TtyTest, Transfer)
 {
-	TtyComms tty0 ;
-	TtyComms tty1 ;
+	Tty tty0 ;
+	Tty tty1 ;
 
 	// server
 	EXPECT_TRUE(tty0.serverListen(DEV0)) ;

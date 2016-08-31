@@ -18,9 +18,10 @@
 ##----------------------------------------------------------------------------------------------------------------------
 ## Library Source
 add_sources (SOURCES
+    src/FileDescriptor.cpp
     src/Comms.cpp
     src/Socket.cpp
-    src/TtyComms.cpp
+    src/Tty.cpp
     src/CommsClient.cpp
     src/CommsServer.cpp
     src/CommsFactory.cpp
@@ -28,6 +29,7 @@ add_sources (SOURCES
 
 include_directories(.)
 set(gtest_src
+	gtest/FileDescriptor_unittest.cpp
 	gtest/Socket_unittest.cpp
 	gtest/SocketClient_unittest.cpp
 	gtest/SocketClientServer_unittest.cpp

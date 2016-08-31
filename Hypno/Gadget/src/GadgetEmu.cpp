@@ -27,11 +27,11 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "GadgetEmu.h"
 
 #include <iostream>
 
-#include "GadgetNoLock.hpp"
+#include "hypno/GadgetNoLock.hpp"
+#include "hypno/GadgetEmu.h"
 
 using namespace HypnoGadget ;
 using namespace HypnoQuartz ;
@@ -103,6 +103,10 @@ bool GadgetEmu::open(const std::string& deviceName)
 //-------------------------------------------------------------------------------------------------------------
 bool GadgetEmu::run()
 {
+	// check emulator still running
+	if (!mIo->isOpen())
+		return false ;
+
 	if (mIo->isReset())
 	{
 		PacketReset(&mRxPacketState) ;

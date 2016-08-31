@@ -30,7 +30,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "Socket.h"
+#include "hypno/Socket.h"
 
 #include "gtest/gtest.h"
 
@@ -147,7 +147,7 @@ TEST_F(SocketTest, UnixData)
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;
@@ -194,18 +194,42 @@ TEST_F(SocketTest, TcpConnect)
 //-------------------------------------------------------------------------------------------------------------------
 TEST_F(SocketTest, TcpData)
 {
+	// Do a connect first
+	{
+		std::cerr << "#### Simple Connect ####" << std::endl ;
+		Socket skts ;
+		Socket sktc ;
+
+		// server
+		std::cerr << " # # # # SERVER" << std::endl ;
+		EXPECT_TRUE(skts.serverListen(TCP_SKTNAME)) ;
+
+		// client
+		std::cerr << " # # # # CLIENT" << std::endl ;
+		EXPECT_TRUE(sktc.clientConnect(TCP_SKTNAME)) ;
+
+		sktc.close() ;
+		skts.close() ;
+		std::cerr << "#### Simple Connect - END ####" << std::endl ;
+	}
+
+
+	std::cerr << "#### Data Start ####" << std::endl ;
+
 	Socket skts ;
 	Socket sktc ;
 
 	// server
+	std::cerr << " # # # # SERVER" << std::endl ;
 	EXPECT_TRUE(skts.serverListen(TCP_SKTNAME)) ;
 
 	// client
+	std::cerr << " # # # # CLIENT" << std::endl ;
 	EXPECT_TRUE(sktc.clientConnect(TCP_SKTNAME)) ;
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;
@@ -227,6 +251,8 @@ TEST_F(SocketTest, TcpData)
 	cfd->close() ;
 	sktc.close() ;
 	skts.close() ;
+
+	std::cerr << "#### Data END ####" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -243,7 +269,7 @@ TEST_F(SocketTest, TcpAnyHost)
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;
@@ -283,7 +309,7 @@ TEST_F(SocketTest, TcpPortRange)
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;
@@ -325,7 +351,7 @@ TEST_F(SocketTest, TcpAnyPort)
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;
@@ -363,7 +389,7 @@ TEST_F(SocketTest, TcpIcomms)
 
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts->accept()) ;
-	EXPECT_TRUE(cfd.get() != nullptr);
+	ASSERT_TRUE(cfd.get() != nullptr);
 	std::cerr << "Accepted" << std::endl ;
 
 	std::string message("Great, it works!") ;

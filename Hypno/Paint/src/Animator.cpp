@@ -30,11 +30,11 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "Animator.h"
+#include "hypno/Animator.h"
 
 #include <iostream>
 
-#include "TimeUtils.h"
+#include "hypno/TimeUtils.h"
 
 using namespace HypnoQuartz ;
 

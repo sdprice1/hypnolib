@@ -31,13 +31,14 @@
 // INCLUDE
 //=============================================================================================================
 #include "CubeAnim.h"
-#include "CubeModel.h"
+#include "hypno/CubeModel.h"
 
 using namespace HypnoQuartz ;
 
 //=============================================================================================================
 // PUBLIC
 //=============================================================================================================
+const unsigned ON_STEPS{4} ;
 
 //-------------------------------------------------------------------------------------------------------------
 CubeAnim::CubeAnim(std::shared_ptr<GadgetQuartz> gadget) :
@@ -52,6 +53,31 @@ CubeAnim::~CubeAnim()
 }
 
 //-------------------------------------------------------------------------------------------------------------
+bool CubeAnim::newFrame()
+{
+	static std::vector<Colour> colours{
+		Colour::RED,
+		Colour::WHITE,
+		Colour::BLUE,
+		Colour::GREEN,
+		Colour::CYAN,
+		Colour::MAGENTA,
+		Colour::YELLOW,
+	} ;
+
+
+	Colour colour(colours[mPos/ON_STEPS]) ;
+	model()->fill(colour) ;
+
+	mPos = (mPos+1) % (colours.size() * ON_STEPS) ;
+
+	return true ;
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------------
+#if 0
 bool CubeAnim::newFrame()
 {
 //	model()->clear() ;
@@ -77,4 +103,4 @@ bool CubeAnim::newFrame()
 
 	return true ;
 }
-
+#endif

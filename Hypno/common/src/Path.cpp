@@ -46,7 +46,7 @@
 #include <sstream>
 #include <algorithm>
 
-#include "Path.h"
+#include "hypno/Path.h"
 
 using namespace HypnoQuartz ;
 

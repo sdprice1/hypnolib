@@ -27,7 +27,7 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "AsciiPainter.h"
+#include "hypno/AsciiPainter.h"
 
 #include <iostream>
 #include <memory>
@@ -35,7 +35,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "AsciiColour.h"
+#include "hypno/AsciiColour.h"
 
 using namespace HypnoQuartz ;
 

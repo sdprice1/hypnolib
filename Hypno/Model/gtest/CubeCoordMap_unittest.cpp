@@ -30,7 +30,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "CubeCoordMap.h"
+#include "hypno/CubeCoordMap.h"
 
 #include "gtest/gtest.h"
 

@@ -2,11 +2,11 @@
 // Copyright Chris Lomont 2007-2008
 // www.HypnoCube.com, www.HypnoSquare.com
 // code to implement packet encoding, decoding
-#include "Packet.h"
+#include "hypno/Packet.h"
 
 #include <assert.h>
 
-#include "CRC16.h"
+#include "hypno/CRC16.h"
 
 //#include <windows.h> // todo - remove - needed for Sleep
 

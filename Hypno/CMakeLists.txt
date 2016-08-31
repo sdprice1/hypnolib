@@ -35,15 +35,15 @@ addIncludes()
 ##----------------------------------------------------------------------------------------------------------------------
 ## Library Source
 add_subdirectory (common)
+add_subdirectory (Debug)
 add_subdirectory (Comms)
 add_subdirectory (HypnoSrc)
-add_subdirectory (Debug)
 add_subdirectory (Paint)
 add_subdirectory (Gadget)
 add_subdirectory (Model)
 add_subdirectory (Text)
 
-add_library (${PROJECT_NAME} ${SOURCES})
+add_library (${PROJECT_NAME} SHARED ${SOURCES})
 addCppcheckTarget()
 addMemcheckTarget()
 addProfileTarget()

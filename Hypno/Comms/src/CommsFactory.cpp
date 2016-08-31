@@ -28,9 +28,9 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "IComms.h"
-#include "Socket.h"
-#include "TtyComms.h"
+#include "hypno/IComms.h"
+#include "hypno/Socket.h"
+#include "hypno/Tty.h"
 
 using namespace HypnoQuartz ;
 
@@ -42,8 +42,8 @@ using namespace HypnoQuartz ;
 std::shared_ptr<IComms> IComms::factory(const std::string& deviceName)
 {
 	// See if it's a TTY
-	if (TtyComms::isTtyName(deviceName))
-		return std::make_shared<TtyComms>() ;
+	if (Tty::isTtyName(deviceName))
+		return std::make_shared<Tty>() ;
 
 	// TCP or UNIX
 	if (Socket::isSocketName(deviceName))

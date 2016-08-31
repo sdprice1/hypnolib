@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "SquareModel.h"
+#include "hypno/SquareModel.h"
 
 using namespace HypnoQuartz ;
 

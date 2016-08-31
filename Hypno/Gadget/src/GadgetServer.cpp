@@ -30,7 +30,6 @@
 //=============================================================================================================
 // INCLUDE
 //=============================================================================================================
-#include "GadgetServer.h"
 
 #include <sys/time.h>
 #include <sys/select.h>
@@ -46,8 +45,10 @@
 #include <iomanip>
 #include <chrono>
 
-#include "Path.h"
-#include "TimeUtils.h"
+#include "hypno/Path.h"
+#include "hypno/TimeUtils.h"
+
+#include "hypno/GadgetServer.h"
 
 using namespace HypnoQuartz ;
 
@@ -68,16 +69,26 @@ public:
 	EmuServer(std::shared_ptr<IComms> comms) :
 		CommsServer(comms),
 		mClient(),
-		mHasReset(false)
+		mHasReset(false),
+		mShutdown(false)
 	{}
-	virtual ~EmuServer() {}
+	virtual ~EmuServer()
+	{
+		shutdown() ;
+	}
+
+	virtual void shutdown()
+	{
+		std::unique_lock<std::mutex> lock(mMutex) ;
+		mShutdown = true ;
+		mRxCond.notify_all() ;
+	}
 
 	virtual bool handler(std::shared_ptr<IComms> comms)
 	{
 		mClient = comms ;
-//		comms->setNonBlocking(false) ;
 
-std::cerr << "<TEST> handler - START" << std::endl;
+std::cerr << "handler - START" << std::endl;
 
 		while (isConnected())
 		{
@@ -86,15 +97,16 @@ std::cerr << "<TEST> handler - START" << std::endl;
 				break ;
 
 			std::vector<uint8_t> rx ;
-//			std::cerr << "<TEST> handler - Receive..." << std::endl;
+std::cerr << "handler - Receive..." << std::endl;
 			if (!comms->receive(rx))
 				break ;
 			if (rx.empty())
 				continue ;
 
-			std::cerr << "<TEST> handler - Received " << rx.size() << std::endl;
+std::cerr << "handler - Received " << rx.size() << std::endl;
 			std::unique_lock<std::mutex> lock(mMutex) ;
 			mRx.insert(mRx.end(), rx.begin(), rx.end()) ;
+			mRxCond.notify_all() ;
 
 IDebug::dump("handler RX:", rx) ;
 IDebug::dump("current mRX:", mRx) ;
@@ -104,7 +116,7 @@ IDebug::dump("current mRX:", mRx) ;
 		mClient.reset() ;
 		mHasReset = true ;
 
-std::cerr << "<TEST> handler - END" << std::endl;
+std::cerr << "handler - END" << std::endl;
 		return false ;
 	}
 
@@ -113,8 +125,14 @@ std::cerr << "<TEST> handler - END" << std::endl;
 		rx.clear() ;
 
 		std::unique_lock<std::mutex> lock(mMutex) ;
-		if (mRx.empty())
+
+		// blocking
+		while (mRx.empty() && !mShutdown)
+			mRxCond.wait(lock) ;
+
+		if (mShutdown)
 			return ;
+
 
 std::cerr << "getRx(" << maxSize <<") mRx.size=" << mRx.size() <<std::endl ;
 
@@ -141,6 +159,8 @@ std::cerr << "getRx(" << maxSize <<") mRx.size=" << mRx.size() <<std::endl ;
 
 	void sendData(std::vector<uint8_t>& data)
 	{
+		IDebug::dump("TX:", data) ;
+
 		std::unique_lock<std::mutex> lock(mMutex) ;
 		mClient->send(data) ;
 	}
@@ -156,8 +176,11 @@ std::cerr << "getRx(" << maxSize <<") mRx.size=" << mRx.size() <<std::endl ;
 private:
 	std::shared_ptr<IComms> mClient ;
 	bool mHasReset ;
+	bool mShutdown ;
 	std::vector<uint8_t> mRx ;
 	std::mutex mMutex ;
+	std::condition_variable mRxCond ;
+	std::condition_variable mTxCond ;
 };
 }
 
@@ -201,6 +224,8 @@ bool GadgetServer::Open(const std::string& portName)
 //-------------------------------------------------------------------------------------------------------------
 bool HypnoQuartz::GadgetServer::isReset()
 {
+	if (!mServer)
+		return false ;
 	return mServer->isReset() ;
 }
 
@@ -213,6 +238,12 @@ debugNormal << "GadgetServer::Close()" << std::endl ;
 debugNormal << "GadgetServer::Close() - DONE" << std::endl ;
 }
 
+//-------------------------------------------------------------------------------------------------------------
+bool GadgetServer::isOpen()
+{
+	return (mComms.get() != nullptr) ;
+}
+
 //=============================================================================================================
 // HypnoGadget::GadgetIO interface
 //=============================================================================================================
@@ -220,6 +251,10 @@ debugNormal << "GadgetServer::Close() - DONE" << std::endl ;
 //-------------------------------------------------------------------------------------------------------------
 uint16_t  GadgetServer::ReadBytes(uint8_t  * buffer, uint16_t  length)
 {
+	if (!mServer)
+		return 0 ;
+
+std::cerr << "GadgetServer::ReadBytes" << std::endl ;
 	std::vector<uint8_t> data ;
 	mServer->getRx(data, length) ;
 
@@ -233,6 +268,9 @@ uint16_t  GadgetServer::ReadBytes(uint8_t  * buffer, uint16_t  length)
 //-------------------------------------------------------------------------------------------------------------
 void GadgetServer::WriteBytes(const uint8_t  * buffer, uint16_t  length)
 {
+	if (!mServer)
+		return ;
+
 	std::vector<uint8_t> data(buffer, buffer+length) ;
 	mServer->sendData(data) ;
 }

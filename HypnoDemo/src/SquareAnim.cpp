@@ -31,10 +31,10 @@
 // INCLUDE
 //=============================================================================================================
 #include "SquareAnim.h"
-#include "GadgetQuartz.h"
-#include "Colour.h"
-#include "Coord.h"
-#include "SquareModel.h"
+#include "hypno/GadgetQuartz.h"
+#include "hypno/Colour.h"
+#include "hypno/Coord.h"
+#include "hypno/SquareModel.h"
 
 using namespace HypnoQuartz ;
 

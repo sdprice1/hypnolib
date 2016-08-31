@@ -31,7 +31,7 @@
 // INCLUDE
 //=============================================================================================================
 
-#include "Colour.h"
+#include "hypno/Colour.h"
 
 using namespace HypnoQuartz ;
 

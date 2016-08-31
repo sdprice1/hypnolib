@@ -22,8 +22,8 @@
 #include <memory>
 #include <algorithm>
 
-#include "GadgetQuartz.h"
-#include "Animator.h"
+#include "hypno/GadgetQuartz.h"
+#include "hypno/Animator.h"
 #include "CubeAnim.h"
 #include "SquareAnim.h"
 

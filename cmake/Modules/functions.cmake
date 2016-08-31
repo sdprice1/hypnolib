@@ -157,6 +157,16 @@ message("addIncludes(${PROJECT_NAME}): CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_
 	foreach (_headerFile ${_HEADERS})
 
 	    get_filename_component(_dir ${_headerFile} PATH)
+
+		# If this is under an 'inc' directory then point at the 'inc' path
+		string (FIND ${_dir} "inc" _pos)
+		message(STATUS "pos=${_pos}")
+		if (${_pos} GREATER -1)
+			# strip off after '/inc'
+			math(EXPR _pos "${_pos}+3")
+			string (SUBSTRING ${_dir} 0 ${_pos} _dir)
+		endif()
+	    
         list (APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${_dir})
 	        
    	endforeach()

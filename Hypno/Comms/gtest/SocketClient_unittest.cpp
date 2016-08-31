@@ -32,8 +32,8 @@
 //=============================================================================================================
 #include "gtest/gtest.h"
 
-#include "CommsClient.h"
-#include "Socket.h"
+#include "hypno/CommsClient.h"
+#include "hypno/Socket.h"
 
 using namespace HypnoQuartz ;
 
@@ -109,6 +109,7 @@ TEST_F(SocketClientTest, UnixConnect)
 //-------------------------------------------------------------------------------------------------------------------
 TEST_F(SocketClientTest, UnixData)
 {
+
 	// server
 	Socket skts ;
 	EXPECT_TRUE(skts.serverListen(UNIX_SKTNAME)) ;
@@ -117,7 +118,7 @@ TEST_F(SocketClientTest, UnixData)
 	SocketClient client ;
 	EXPECT_TRUE(client.start(UNIX_SKTNAME)) ;
 
-skts.setNonBlocking(true);
+//skts.setNonBlocking(true);
 	std::cerr << "Accept..." << std::endl ;
 	std::shared_ptr<IComms> cfd(skts.accept()) ;
 	EXPECT_TRUE(cfd.get() != nullptr);
@@ -141,6 +142,7 @@ skts.setNonBlocking(true);
 
 	cfd->close() ;
 	skts.close() ;
+
 }
 
 
