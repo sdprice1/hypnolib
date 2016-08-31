@@ -50,6 +50,8 @@
 #include <chrono>
 #include <atomic>
 
+// for developer debug
+#include "hypno/CommsDebug.h"
 
 using namespace HypnoQuartz ;
 
@@ -64,12 +66,12 @@ public:
 	ClientTty() :
 		mExit(false)
 	{
-		std::cerr << "ClientTty NEW @ " << this << std::endl ;
+		DEBUG_COMMS_COUT << "ClientTty NEW @ " << this << std::endl ;
 	}
 
 	virtual ~ClientTty()
 	{
-		std::cerr << "ClientTty DEL @ " << this << std::endl ;
+		DEBUG_COMMS_COUT << "ClientTty DEL @ " << this << std::endl ;
 		close() ;
 	}
 
@@ -89,7 +91,7 @@ public:
 	{
 		std::stringstream ss ;
 		ss << "ClientTty::close() @ " << this ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << ss.str() << std::endl ;
 
 		setFd(-1) ;
 		return IFile::FileStatus::OK ;
@@ -102,7 +104,7 @@ public:
 
 		std::stringstream ss ;
 		ss << "ClientTty::isInUse(fd=" << getFileDescriptor() << ") @ " << this << " = " << inUse << " exit=" << mExit  ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << ss.str() << std::endl ;
 
 		return inUse ;
 	}
@@ -116,7 +118,7 @@ public:
 	{
 		std::stringstream ss ;
 		ss << "ClientTty::setInUse(fd=" << fd << ") @ " << this ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << ss.str() << std::endl ;
 
 		if (mExit)
 			fd = -1 ;
@@ -154,26 +156,20 @@ Tty::Tty() :
     mRxBuff(),
 	mClient()
 {
-	std::stringstream ss ;
-	ss << "Tty NEW @ " << this ;
-	std::cerr << ss.str() << std::endl ;
-
+	DEBUG_COMMS_COUT << "Tty NEW @ " << this << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 Tty::~Tty()
 {
-	std::stringstream ss ;
-	ss << "Tty DEL @ " << this ;
-	std::cerr << ss.str() << std::endl ;
-
+	DEBUG_COMMS_COUT << "Tty DEL @ " << this << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 IFile::FileStatus Tty::close()
 {
-	std::stringstream ss ;
-	ss << "Tty::close() @ " << this ;
+	DEBUG_COMMS_COUT << "Tty::close() @ " << this << std::endl ;
+
 	return this->Comms::close() ;
 }
 
@@ -209,17 +205,13 @@ std::shared_ptr<IComms> Tty::accept() const
 
 	std::shared_ptr<ClientTty> client(std::dynamic_pointer_cast<ClientTty>(mClient)) ;
 
-	std::stringstream ss ;
-	ss << "Tty::accept() @ " << this ;
-	std::cerr << ss.str() << std::endl ;
+	DEBUG_COMMS_COUT << "Tty::accept() @ " << this << std::endl ;
 
 
 	// Don't accept if exiting
 	if (client->isExiting())
 	{
-		std::stringstream ss ;
-		ss << "Tty::accept() @ " << this << " client exiting" ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << "Tty::accept() @ " << this << " client exiting" << std::endl ;
 
 		return std::shared_ptr<IComms>() ;
 	}
@@ -227,9 +219,7 @@ std::shared_ptr<IComms> Tty::accept() const
 	// There can only ever be 1 accepted client
 	if (client->isInUse())
 	{
-		std::stringstream ss ;
-		ss << "Tty::accept() @ " << this << " client is in use" ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << "Tty::accept() @ " << this << " client is in use" << std::endl ;
 
 		return std::shared_ptr<IComms>() ;
 	}
@@ -237,16 +227,12 @@ std::shared_ptr<IComms> Tty::accept() const
 	// Skip if fd is closed
 	if (!isOpen())
 	{
-		std::stringstream ss ;
-		ss << "Tty::accept() @ " << this << " FD closed" ;
-		std::cerr << ss.str() << std::endl ;
+		DEBUG_COMMS_COUT << "Tty::accept() @ " << this << " FD closed" << std::endl ;
 
 		return std::shared_ptr<IComms>() ;
 	}
 
-	ss.str("") ;
-	ss << "Tty::accept() - accepted : fd=" << getFileDescriptor() << " open? " << isOpen() ;
-	std::cerr << ss.str() << std::endl ;
+	DEBUG_COMMS_COUT << "Tty::accept() - accepted : fd=" << getFileDescriptor() << " open? " << isOpen() << std::endl ;
 
 
 	// return a copy of this fd
@@ -261,7 +247,7 @@ std::shared_ptr<IComms> Tty::accept() const
 //-------------------------------------------------------------------------------------------------------------
 bool Tty::ttyOpen(const std::string& device)
 {
-	std::cerr << "Tty::ttyOpen(" << device << ") @ " << this << std::endl ;
+	DEBUG_COMMS_COUT << "Tty::ttyOpen(" << device << ") @ " << this << std::endl ;
 
 	int fd = ::open(device.c_str(), O_RDWR) ;
 	if (fd <0)

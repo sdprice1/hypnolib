@@ -48,6 +48,9 @@
 #include <algorithm>
 #include <iostream>
 
+// for developer debug
+#include "hypno/CommsDebug.h"
+
 using namespace HypnoQuartz ;
 
 //=============================================================================================================
@@ -112,21 +115,21 @@ Socket::Socket() :
 	mAddrUnix(),
 	mUnixPath()
 {
-	std::cerr << "Socket NEW @ " << this << std::endl ;
+	DEBUG_COMMS_COUT << "Socket NEW @ " << this << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 Socket::~Socket()
 {
-	std::cerr << "Socket DEL @ " << this << " fd=" << getFd() << std::endl ;
+	DEBUG_COMMS_COUT << "Socket DEL @ " << this << " fd=" << getFd() << std::endl ;
 	close() ;
-	std::cerr << "Socket DEL - END @ " << this << " fd=" << getFd() << std::endl ;
+	DEBUG_COMMS_COUT << "Socket DEL - END @ " << this << " fd=" << getFd() << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 IFile::FileStatus Socket::close()
 {
-	std::cerr << "Socket::close() @ " << this << " fd=" << getFd() << std::endl ;
+	DEBUG_COMMS_COUT << "Socket::close() @ " << this << " fd=" << getFd() << std::endl ;
 	IFile::FileStatus status = this->Comms::close() ;
 
 	if (!mUnixPath.empty())
@@ -137,7 +140,7 @@ IFile::FileStatus Socket::close()
     mAddrPtr = nullptr ;
     mUnixPath.clear() ;
 
-	std::cerr << "Socket::close() - END @ " << this << " fd=" << getFd() << std::endl ;
+	DEBUG_COMMS_COUT << "Socket::close() - END @ " << this << " fd=" << getFd() << std::endl ;
 	return status ;
 }
 
@@ -157,7 +160,7 @@ bool Socket::clientConnect(unsigned port, const std::string& host)
 //-------------------------------------------------------------------------------------------------------------
 bool Socket::clientConnect(const std::string& socketName)
 {
-	std::cerr << "Socket::clientConnect() @ " << this << std::endl ;
+	DEBUG_COMMS_COUT << "Socket::clientConnect() @ " << this << std::endl ;
 	// create the socket & set up address
 	if (!socketFactory(socketName))
 		return false ;
@@ -168,7 +171,7 @@ bool Socket::clientConnect(const std::string& socketName)
 	int fd(getFileDescriptor()) ;
     if (::connect(fd, mAddrPtr, mAddrSize) != -1)
     {
-    	std::cerr << "Socket::clientConnect() @ " << this << " - connected fd=" << fd << std::endl ;
+    	DEBUG_COMMS_COUT << "Socket::clientConnect() @ " << this << " - connected fd=" << fd << std::endl ;
     	return true ;
     }
 
@@ -186,7 +189,7 @@ bool Socket::serverListen(unsigned port, const std::string& host, unsigned maxCo
 //-------------------------------------------------------------------------------------------------------------
 bool Socket::serverListen(const std::string& socketName, unsigned maxConnections)
 {
-	std::cerr << "Socket::serverListen() @ " << this << std::endl ;
+	DEBUG_COMMS_COUT << "Socket::serverListen() @ " << this << std::endl ;
 
 	setMaxConnections(maxConnections) ;
 
@@ -227,7 +230,7 @@ bool Socket::serverListen(const std::string& socketName, unsigned maxConnections
 		return false;
 	}
 
-	std::cerr << "Socket::serverListen() @ " << this << " - listening fd=" << fd << std::endl ;
+	DEBUG_COMMS_COUT << "Socket::serverListen() @ " << this << " - listening fd=" << fd << std::endl ;
 	return true ;
 }
 
@@ -237,6 +240,12 @@ std::shared_ptr<IComms> Socket::accept() const
 	if (!isOpen())
 		return std::shared_ptr<IComms>() ;
 
+	// Do blocking select until read is available
+	std::set<IFile::SelectMode> mode = getFd()->select() ;
+	if (mode.find(IFile::SelectMode::READ) == mode.end())
+		return std::shared_ptr<IComms>() ;
+
+	// Should now be ok to do accept
 	int fd(getFileDescriptor()) ;
 
     int client;
@@ -244,8 +253,7 @@ std::shared_ptr<IComms> Socket::accept() const
     if ((client = ::accept(fd, mAddrPtr, &addrLen)) >= 0)
         return std::shared_ptr<IComms>(new Socket(client)) ;
 
-
-::perror("accept") ;
+   	DEBUG_COMMS_COUT << "Socket::accept() @ " << this << " error " << std::endl ;
 	return std::shared_ptr<IComms>() ;
 }
 

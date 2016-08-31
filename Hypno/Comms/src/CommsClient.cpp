@@ -36,6 +36,8 @@
 #include <iostream>
 #include <chrono>
 
+// for developer debug
+#include "hypno/CommsDebug.h"
 
 using namespace HypnoQuartz ;
 
@@ -59,15 +61,15 @@ CommsClient::CommsClient(std::shared_ptr<IComms> comms) :
 	mTxBuffer(),
 	mRxBuffer()
 {
-	std::cerr << "CommsClient NEW @ " << this << " comms=" << mComms.get() << std::endl ;
+	DEBUG_COMMS_COUT << "CommsClient NEW @ " << this << " comms=" << mComms.get() << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 CommsClient::~CommsClient()
 {
-	std::cerr << "CommsClient DEL @ " << this << " comms=" << mComms.get() << std::endl ;
+	DEBUG_COMMS_COUT << "CommsClient DEL @ " << this << " comms=" << mComms.get() << std::endl ;
 	this->Thread::exit() ;
-	std::cerr << "CommsClient DEL - END @ " << this << " comms=" << mComms.get() << std::endl ;
+	DEBUG_COMMS_COUT << "CommsClient DEL - END @ " << this << " comms=" << mComms.get() << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -102,7 +104,7 @@ bool CommsClient::sendData(const std::vector<uint8_t>& data)
 	std::unique_lock<std::mutex> lock(mMutex) ;
 	mTxBuffer.insert(mTxBuffer.end(), data.begin(), data.end()) ;
 
-IDebug::dump("CommsClient::sendData ", data) ;
+//IDebug::dump("CommsClient::sendData ", data) ;
 	return true ;
 }
 
@@ -128,10 +130,10 @@ bool CommsClient::receiveData(std::vector<uint8_t>& data, unsigned timeoutMs)
 		// wait for data or timeout
 		while (mRxBuffer.empty())
 		{
-std::cerr << "CommsClient::receiveData waiting for data or timeout " << timeoutMs << std::endl ;
+DEBUG_COMMS_COUT << "CommsClient::receiveData waiting for data or timeout " << timeoutMs << std::endl ;
 			if (mCondRx.wait_for(lock, std::chrono::milliseconds(timeoutMs)) == std::cv_status::timeout)
 				return false ;
-std::cerr << "CommsClient::receiveData wait complete" << std::endl ;
+DEBUG_COMMS_COUT << "CommsClient::receiveData wait complete" << std::endl ;
 		}
 	}
 	else
@@ -227,7 +229,7 @@ bool CommsClient::run()
 	if (selectSet.find(IComms::SelectMode::ERROR) != selectSet.end())
 	{
 		// TODO..
-		std::cerr << "Error..." << std::endl ;
+		DEBUG_COMMS_COUT << "Error..." << std::endl ;
 		return false ;
 	}
 

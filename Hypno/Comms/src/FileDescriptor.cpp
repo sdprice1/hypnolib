@@ -40,22 +40,10 @@
 #include "hypno/CommsException.h"
 #include "hypno/FileDescriptor.h"
 
+// for developer debug
+#include "hypno/CommsDebug.h"
+
 using namespace HypnoQuartz ;
-
-//#define DEBUG_FD
-
-#ifdef DEBUG_FD
-#define DEBUG_FD_COUT	DEBUG_FD_COUT
-#else
-class NullBuffer : public std::streambuf
-{
-public:
-  int overflow(int c) { return c; }
-};
-NullBuffer null_buffer;
-std::ostream null_stream(&null_buffer);
-#define DEBUG_FD_COUT	null_stream
-#endif
 
 #define IGNORE_RETURN		{int rc =
 #define IGNORE_RETURN_END	; (void)rc; }
@@ -171,7 +159,7 @@ FileDescriptor::FileDescriptor() :
 	mMutex(),
 	mAborting(false)
 {
-	DEBUG_FD_COUT << "FileDescriptor NEW @ " << this << " fd=" << mFd << std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor NEW @ " << this << " fd=" << mFd << std::endl ;
 
 	init() ;
 }
@@ -185,7 +173,7 @@ FileDescriptor::FileDescriptor(int fd) :
 	mMutex(),
 	mAborting(false)
 {
-	DEBUG_FD_COUT << "FileDescriptor NEW @ " << this << " fd=" << mFd << std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor NEW @ " << this << " fd=" << mFd << std::endl ;
 
 	init() ;
 }
@@ -219,7 +207,7 @@ void FileDescriptor::setFd(int fd)
 //-------------------------------------------------------------------------------------------------------------
 IFile::FileStatus FileDescriptor::close()
 {
-	DEBUG_FD_COUT << "FileDescriptor::close() @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::close() @ " << this  << " fd=" << mFd<< std::endl ;
 	this->abort() ;
 
 	std::unique_lock<std::mutex> lock(mMutex) ;
@@ -238,9 +226,9 @@ IFile::FileStatus FileDescriptor::close()
 //-------------------------------------------------------------------------------------------------------------
 FileDescriptor::~FileDescriptor()
 {
-	DEBUG_FD_COUT << "FileDescriptor DEL @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor DEL @ " << this  << " fd=" << mFd<< std::endl ;
 	this->close() ;
-	DEBUG_FD_COUT << "FileDescriptor DEL - END @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor DEL - END @ " << this  << " fd=" << mFd<< std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -255,7 +243,7 @@ IFile::FileStatus FileDescriptor::read(std::vector<uint8_t>& data, unsigned numB
 	if (!isOpen())
 		return IFile::FileStatus::CLOSED ;
 
-	DEBUG_FD_COUT << "FileDescriptor::read() @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::read() @ " << this  << " fd=" << mFd<< std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Call the shared select method to do the transaction
@@ -275,7 +263,7 @@ IFile::FileStatus FileDescriptor::write(const std::vector<uint8_t>& data, unsign
 	if (!isOpen())
 		return IFile::FileStatus::CLOSED ;
 
-	DEBUG_FD_COUT << "FileDescriptor::write() @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::write() @ " << this  << " fd=" << mFd<< std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Call the shared select method to do the transaction
@@ -309,7 +297,7 @@ void FileDescriptor::abort()
 	setBlocking(mPipeRdFd, true) ;
 
 	if (mFd > -1)
-		DEBUG_FD_COUT << "FileDescriptor::abort() @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::abort() @ " << this  << " fd=" << mFd<< std::endl ;
 
 }
 
@@ -319,7 +307,7 @@ std::set<IFile::SelectMode> FileDescriptor::select(unsigned timeoutMs, bool read
 	if (!isOpen())
 		return std::set<IFile::SelectMode>() ;
 
-	DEBUG_FD_COUT << "FileDescriptor::select(read="<<read<<", write="<<write<<") @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::select(read="<<read<<", write="<<write<<") @ " << this  << " fd=" << mFd<< std::endl ;
 	std::unique_lock<std::mutex> lock(mMutex) ;
 
 	// Call the shared select method to do the transaction
@@ -388,7 +376,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 	bool selRead = data.selectRead || (data.numBytesToRead > 0) ;
 	bool selWrite = data.selectWrite || (data.numBytesToWrite > 0) ;
 
-	DEBUG_FD_COUT << "FileDescriptor::select(" <<
+	DEBUG_COMMS_COUT << "FileDescriptor::select(" <<
 			(selRead ? "READ " : "") <<
 			(selWrite ? "WRITE " : "") <<
 			") timeout=" << data.timeoutMs << " @ " << this  << " fd=" << mFd<< std::endl ;
@@ -427,7 +415,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 
 	if (rc < 0)
 	{
-		DEBUG_FD_COUT << "FileDescriptor::select() ERROR @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::select() ERROR @ " << this  << " fd=" << mFd<< std::endl ;
 		if (data.selectSet)
 			data.selectSet->insert(IFile::SelectMode::ERROR) ;
 		return IFile::FileStatus::ERROR ;
@@ -436,7 +424,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 	// Error
 	if (FD_ISSET(mFd, &err_fds))
 	{
-		DEBUG_FD_COUT << "FileDescriptor::select() ERROR FD @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::select() ERROR FD @ " << this  << " fd=" << mFd<< std::endl ;
 		if (data.selectSet)
 			data.selectSet->insert(IFile::SelectMode::ERROR) ;
 		return IFile::FileStatus::ERROR ;
@@ -445,7 +433,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 	// Abort
 	if (FD_ISSET(mPipeRdFd, &rd_fds))
 	{
-		DEBUG_FD_COUT << "FileDescriptor::select() ABORT @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::select() ABORT @ " << this  << " fd=" << mFd<< std::endl ;
 		char dummy[1] ;
 		IGNORE_RETURN ::read(mPipeRdFd, &dummy[0], 1) IGNORE_RETURN_END ;
 		return IFile::FileStatus::ABORTED ;
@@ -456,7 +444,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 	{
 		if (data.selectSet)
 			data.selectSet->insert(IFile::SelectMode::WRITE) ;
-		DEBUG_FD_COUT << "FileDescriptor::select() WRITE @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::select() WRITE @ " << this  << " fd=" << mFd<< std::endl ;
 
 		if (data.numBytesToWrite > 0)
 		{
@@ -474,7 +462,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 	// Read
 	if (FD_ISSET(mFd, &rd_fds))
 	{
-		DEBUG_FD_COUT << "FileDescriptor::select() READ @ " << this  << " fd=" << mFd<< std::endl ;
+		DEBUG_COMMS_COUT << "FileDescriptor::select() READ @ " << this  << " fd=" << mFd<< std::endl ;
 		if (data.selectSet)
 			data.selectSet->insert(IFile::SelectMode::READ) ;
 
@@ -484,7 +472,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 			int rc = ::read(mFd, &buff[0], data.numBytesToRead) ;
 
 	if (rc < 0) ::perror("READ") ;
-	DEBUG_FD_COUT << "FileDescriptor::select() rc=" << rc << " @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::select() rc=" << rc << " @ " << this  << " fd=" << mFd<< std::endl ;
 
 			if (rc < 0)
 			{
@@ -496,7 +484,7 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 			if (rc > 0)
 			{
 				std::vector<uint8_t>& vec(*(data.readData)) ;
-				DEBUG_FD_COUT << "FileDescriptor::select() READ vec @ " << &vec << " END=" << (void*)&(*(vec.end())) << std::endl ;
+				DEBUG_COMMS_COUT << "FileDescriptor::select() READ vec @ " << &vec << " END=" << (void*)&(*(vec.end())) << std::endl ;
 				vec.insert(vec.end(), buff.begin(), buff.end()) ;
 			}
 			*(data.numBytesRead) = static_cast<unsigned>(rc) ;
@@ -506,13 +494,13 @@ IFile::FileStatus FileDescriptor::selectRW(SelectData& data)
 				if (mAborting)
 					return IFile::FileStatus::ABORTED ;
 
-				DEBUG_FD_COUT << "READ 0 bytes" << std::endl ;
+				DEBUG_COMMS_COUT << "READ 0 bytes" << std::endl ;
 				throw CommsException("Connection disconnected") ;
 			}
 		}
 	}
 
-	DEBUG_FD_COUT << "FileDescriptor::select() OK @ " << this  << " fd=" << mFd<< std::endl ;
+	DEBUG_COMMS_COUT << "FileDescriptor::select() OK @ " << this  << " fd=" << mFd<< std::endl ;
 	return IFile::FileStatus::OK ;
 }
 

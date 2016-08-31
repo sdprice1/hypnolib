@@ -44,6 +44,9 @@
 #include "hypno/FileDescriptor.h"
 #include "hypno/Comms.h"
 
+// for developer debug
+#include "hypno/CommsDebug.h"
+
 using namespace HypnoQuartz ;
 
 //=============================================================================================================
@@ -62,9 +65,9 @@ Comms::Comms() :
 //-------------------------------------------------------------------------------------------------------------
 Comms::~Comms()
 {
-	std::cerr << "Comms DEL @ " << this << " fd=" << mFd << std::endl ;
+	DEBUG_COMMS_COUT << "Comms DEL @ " << this << " fd=" << mFd << std::endl ;
 	this->exit() ;
-	std::cerr << "Comms DEL - END @ " << this << " fd=" << mFd << std::endl ;
+	DEBUG_COMMS_COUT << "Comms DEL - END @ " << this << " fd=" << mFd << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -97,7 +100,7 @@ bool Comms::isOpen() const
 //-------------------------------------------------------------------------------------------------------------
 IFile::FileStatus Comms::close()
 {
-	std::cerr << "Comms::close() @ " << this << " fd=" << mFd << std::endl ;
+	DEBUG_COMMS_COUT << "Comms::close() @ " << this << " fd=" << mFd << std::endl ;
 	return mFd->close() ;
 }
 

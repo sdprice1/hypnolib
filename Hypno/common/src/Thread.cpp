@@ -33,6 +33,22 @@
 
 #include "hypno/Thread.h"
 
+// Uncomment this line to enable verbose debug
+//#define DEBUG_THREAD
+
+#ifdef DEBUG_THREAD
+#define DEBUG_THREAD_COUT	std::cout
+#else
+class NullBuffer : public std::streambuf
+{
+public:
+  int overflow(int c) { return c; }
+};
+static NullBuffer null_buffer;
+static std::ostream null_stream(&null_buffer);
+#define DEBUG_THREAD_COUT	null_stream
+#endif
+
 using namespace HypnoQuartz ;
 
 //=============================================================================================================
@@ -50,7 +66,7 @@ Thread::Thread(const std::string& name) :
 	mThread(),
 	mMutex()
 {
-	std::cerr << "Thread[" << mName <<"] NEW" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] NEW" << std::endl ;
 
 	// now create thread
 	mThread = std::thread(&Thread::threadRun, this) ;
@@ -59,15 +75,15 @@ Thread::Thread(const std::string& name) :
 //-------------------------------------------------------------------------------------------------------------
 Thread::~Thread()
 {
-	std::cerr << "Thread[" << mName <<"] DEL" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] DEL" << std::endl ;
 
 	// cause the thread to exit
 	this->exit() ;
 
-	std::cerr << "Thread[" << mName <<"] DEL - join" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] DEL - join" << std::endl ;
 	mThread.join() ;
 
-	std::cerr << "Thread[" << mName <<"] DEL - End" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] DEL - End" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -91,7 +107,7 @@ bool Thread::isStop() const
 //-------------------------------------------------------------------------------------------------------------
 bool Thread::start()
 {
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
 
 	// send request
 	startRequest() ;
@@ -102,14 +118,14 @@ bool Thread::start()
 		TimeUtils::msSleep(1) ;
 	}
 
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
 	return true ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 bool Thread::stop()
 {
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
 
 	// Request a stop
 	stopRequest() ;
@@ -123,19 +139,19 @@ bool Thread::stop()
 		stopRequest() ;
 	}
 
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
 	return true ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
 bool Thread::exit()
 {
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << std::endl ;
 
 	// wait for thread exit
 	while(mThreadRunning)
 	{
-//		std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " exit request..." << std::endl ;
+//		DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << " exit request..." << std::endl ;
 
 		// send request
 		exitRequest() ;
@@ -143,7 +159,7 @@ bool Thread::exit()
 		TimeUtils::msSleep(1) ;
 	}
 
-	std::cerr << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] " << __FUNCTION__ << " - DONE"<< std::endl ;
 	return true ;
 }
 
@@ -185,27 +201,27 @@ void Thread::threadRun()
 {
 	mThreadRunning = true ;
 
-	std::cerr << "Thread[" << mName <<"] threadRun - START" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - START" << std::endl ;
 	while (!mExit)
 	{
 		// wait for event which causes either exit or the thread to start running
 		{
-			std::cerr << "Thread[" << mName <<"] threadRun - waiting..." << std::endl ;
+			DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - waiting..." << std::endl ;
 			std::unique_lock<std::mutex> lock(mMutex);
 			while (!mRun && !mExit)
 			{
 				mCond.wait(lock) ;
-				std::cerr << "Thread[" << mName <<"] threadRun - cond signal run=" << mRun << " exit=" << mExit << std::endl ;
+				DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - cond signal run=" << mRun << " exit=" << mExit << std::endl ;
 			}
 
-			std::cerr << "Thread[" << mName <<"] threadRun - run=" << mRun << " exit=" << mExit << std::endl ;
+			DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - run=" << mRun << " exit=" << mExit << std::endl ;
 
 			if (mExit)
 				break ;
 		}
 
 		mRunning = true ;
-		std::cerr << "Thread[" << mName <<"] threadRun - running..." << std::endl ;
+		DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - running..." << std::endl ;
 		while (mRun && !mExit)
 		{
 			if (!run())
@@ -215,10 +231,10 @@ void Thread::threadRun()
 			}
 		}
 		mRunning = false ;
-		std::cerr << "Thread[" << mName <<"] threadRun - not running" << std::endl ;
+		DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - not running" << std::endl ;
 	}
 
 	mThreadRunning = false ;
 
-	std::cerr << "Thread[" << mName <<"] threadRun - END" << std::endl ;
+	DEBUG_THREAD_COUT << "Thread[" << mName <<"] threadRun - END" << std::endl ;
 }

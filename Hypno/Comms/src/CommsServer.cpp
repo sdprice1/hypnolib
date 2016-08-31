@@ -35,6 +35,8 @@
 #include <functional>
 #include <algorithm>
 
+// for developer debug
+#include "hypno/CommsDebug.h"
 
 using namespace HypnoQuartz ;
 
@@ -57,21 +59,21 @@ public:
 		mHandler(handler),
 		mComms()
 	{
-		std::cerr << "CommsHandler[" << getName() << "] NEW" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] NEW" << std::endl ;
 	}
 
 	virtual ~CommsHandler()
 	{
-		std::cerr << "CommsHandler[" << getName() << "] DEL" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] DEL" << std::endl ;
 		if (mComms)
 			mComms->close() ;
 		this->Thread::exit() ;
-		std::cerr << "CommsHandler[" << getName() << "] DEL - END" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] DEL - END" << std::endl ;
 	}
 
 	virtual bool commsStart(std::shared_ptr<IComms> comms)
 	{
-		std::cerr << "CommsHandler[" << getName() << "] START" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] START" << std::endl ;
 		mComms = comms ;
 		this->Thread::start() ;
 		return true ;
@@ -79,7 +81,7 @@ public:
 
 	virtual bool commsStop()
 	{
-		std::cerr << "CommsHandler[" << getName() << "] STOP" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] STOP" << std::endl ;
 		if (!mComms)
 			return true ;
 
@@ -89,13 +91,13 @@ public:
 		// stop this thread ready for next connection
 		stopRequest() ;
 
-		std::cerr << "CommsHandler[" << getName() << "] STOP - END" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] STOP - END" << std::endl ;
 		return true ;
 	}
 
 	virtual bool commsExit()
 	{
-		std::cerr << "CommsHandler[" << getName() << "] EXIT" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] EXIT" << std::endl ;
 		if (!mComms)
 			return true ;
 
@@ -105,7 +107,7 @@ public:
 		// exit this thread
 		exitRequest() ;
 
-		std::cerr << "CommsHandler[" << getName() << "] EXIT - END" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] EXIT - END" << std::endl ;
 		return true ;
 	}
 
@@ -117,12 +119,12 @@ public:
 protected:
 	virtual bool run() override
 	{
-		std::cerr << "CommsHandler[" << getName() << "] RUN" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] RUN" << std::endl ;
 		// run the handler
 		mHandler(mComms) ;
 
 		commsStop() ;
-		std::cerr << "CommsHandler[" << getName() << "] RUN - END" << std::endl ;
+		DEBUG_COMMS_COUT << "CommsHandler[" << getName() << "] RUN - END" << std::endl ;
 		return false ;
 	}
 
@@ -151,28 +153,30 @@ CommsServer::CommsServer(std::shared_ptr<IComms> comms, unsigned maxConnections)
 //-------------------------------------------------------------------------------------------------------------
 CommsServer::~CommsServer()
 {
-	std::cerr << "CommsServer DEL - kill handlers..." << std::endl ;
-
 	mExiting = true ;
-
-	// Kill all of the handlers
-	for (auto handler : mHandlers)
-	{
-		handler->commsExit() ;
-	}
-
-	std::cerr << "CommsServer DEL - kill comms..." << std::endl ;
+	DEBUG_COMMS_COUT << "CommsServer DEL" << std::endl ;
 
 	// stop comms
+	DEBUG_COMMS_COUT << "CommsServer DEL - kill comms..." << std::endl ;
 	if (mComms)
 		mComms->close() ;
 
-	std::cerr << "CommsServer DEL - kill this thread..." << std::endl ;
+	// Kill all of the handlers
+	DEBUG_COMMS_COUT << "CommsServer DEL - kill handlers..." << std::endl ;
+	{
+		std::unique_lock<std::mutex> lock(mMutex) ;
+		for (auto handler : mHandlers)
+		{
+			handler->commsExit() ;
+		}
+		mHandlers.clear() ;
+	}
 
 	// now kill this thread
+	DEBUG_COMMS_COUT << "CommsServer DEL - kill this thread..." << std::endl ;
 	this->Thread::exit() ;
 
-	std::cerr << "CommsServer DEL - END" << std::endl ;
+	DEBUG_COMMS_COUT << "CommsServer DEL - END" << std::endl ;
 }
 
 //-------------------------------------------------------------------------------------------------------------
@@ -225,7 +229,7 @@ bool CommsServer::isConnected() const
 //-------------------------------------------------------------------------------------------------------------
 bool CommsServer::run()
 {
-std::cerr << "CommsServer::run() - START" << std::endl ;
+DEBUG_COMMS_COUT << "CommsServer::run() - START" << std::endl ;
 
 	mConnected = true ;
 	while (okToRun())
@@ -234,13 +238,13 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 		TimeUtils::msSleep(TICK_MS) ;
 		if (!okToRun())
 		{
-			std::cerr << "CommsServer::run() - not ok to run" << std::endl ;
+			DEBUG_COMMS_COUT << "CommsServer::run() - not ok to run" << std::endl ;
 			break ;
 		}
 
 		try
 		{
-			std::cerr << "CommsServer::run() - wait for accept...." << std::endl ;
+			DEBUG_COMMS_COUT << "CommsServer::run() - wait for accept...." << std::endl ;
 
 			// NOTE: Because I've used a smart pointer, if it doesn't get passed to a handler (and therefore copied) then
 			// it will go out of scope and automatically be closed
@@ -248,40 +252,48 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 			if (!client)
 				continue ;
 
-			std::cerr << "CommsServer::run() - accepted client @ " << client.get() << std::endl ;
+			DEBUG_COMMS_COUT << "CommsServer::run() - accepted client @ " << client.get() << std::endl ;
 			if (!okToRun())
 			{
-				std::cerr << "CommsServer::run() - not ok to run" << std::endl ;
+				DEBUG_COMMS_COUT << "CommsServer::run() - not ok to run" << std::endl ;
 				break ;
 			}
 
-			std::cerr << "-- Handlers ----" << std::endl ;
+#ifdef DEBUG_COMMS
+			DEBUG_COMMS_COUT << "-- Handlers ----" << std::endl ;
 			for (auto hndl : mHandlers)
 			{
-				std::cerr << hndl->getName() << " : running=" << hndl->isRunning() << " stop=" << hndl->isStop() << std::endl ;
+				DEBUG_COMMS_COUT << hndl->getName() << " : running=" << hndl->isRunning() << " stop=" << hndl->isStop() << std::endl ;
 			}
-			std::cerr << "----------------" << std::endl ;
+			DEBUG_COMMS_COUT << "----------------" << std::endl ;
+#endif
 
 			// Find an available handler
-			auto handler(std::find_if(mHandlers.begin(), mHandlers.end(), [this](const std::shared_ptr<CommsHandler>& hdl)->bool{
-				return hdl->isAvailable() ;
-			})) ;
-			if (handler == mHandlers.end())
-				continue ;
+			auto handler(mHandlers.end()) ;
+			{
+				std::unique_lock<std::mutex> lock(mMutex) ;
 
-			std::cerr << "CommsServer::run() - Using handler " << (*handler)->getName() << std::endl ;
-			std::cerr << "CommsServer::run() - start client @ " << client.get() << std::endl ;
+				handler = (std::find_if(mHandlers.begin(), mHandlers.end(), [this](const std::shared_ptr<CommsHandler>& hdl)->bool{
+					return hdl->isAvailable() ;
+				})) ;
+				if (handler == mHandlers.end())
+					continue ;
+			}
+
+			DEBUG_COMMS_COUT << "CommsServer::run() - Using handler " << (*handler)->getName() << std::endl ;
+			DEBUG_COMMS_COUT << "CommsServer::run() - start client @ " << client.get() << std::endl ;
 
 			// Pass client connection to this handler
 			(*handler)->commsStart(client) ;
 
-			std::cerr << "-- Handlers now ----" << std::endl ;
+#ifdef DEBUG_COMMS
+			DEBUG_COMMS_COUT << "-- Handlers now ----" << std::endl ;
 			for (auto hndl : mHandlers)
 			{
-				std::cerr << hndl->getName() << " : running=" << hndl->isRunning() << " stop=" << hndl->isStop() << std::endl ;
+				DEBUG_COMMS_COUT << hndl->getName() << " : running=" << hndl->isRunning() << " stop=" << hndl->isStop() << std::endl ;
 			}
-			std::cerr << "----------------" << std::endl ;
-
+			DEBUG_COMMS_COUT << "----------------" << std::endl ;
+#endif
 		}
 		catch (...)
 		{
@@ -289,7 +301,7 @@ std::cerr << "CommsServer::run() - START" << std::endl ;
 		}
 	}
 
-	std::cerr << "CommsServer::run() - END" << std::endl ;
+	DEBUG_COMMS_COUT << "CommsServer::run() - END" << std::endl ;
 	mComms->close() ;
 
 	// If we're exiting then tell thread to exit
